@@ -6,6 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
+import { useHolidayCountries } from "@/hooks/use-holiday-countries";
 import { MonthlyGrid } from "./monthly-grid";
 import { WeeklyGrid } from "./weekly-grid";
 import { EventDetailSheet } from "./event-detail-sheet";
@@ -49,6 +51,8 @@ export function CalendarView({
   });
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [formSheetOpen, setFormSheetOpen] = useState(false);
+  const [holidayCountries, setHolidayPreference, holidayPreference] =
+    useHolidayCountries();
   const [formSheetMode, setFormSheetMode] = useState<"create" | "edit">("create");
   const [formSheetEvent, setFormSheetEvent] = useState<EventRecord | null>(null);
 
@@ -271,6 +275,34 @@ export function CalendarView({
             </button>
           </div>
 
+          <div
+            role="group"
+            aria-label="Paesi festività"
+            className="flex items-center gap-2"
+          >
+            <label
+              htmlFor="holiday-countries"
+              className="text-sm text-muted-foreground"
+            >
+              Festività
+            </label>
+            <Select
+              id="holiday-countries"
+              value={holidayPreference}
+              onChange={(e) =>
+                setHolidayPreference(
+                  e.target.value as "IT" | "DE" | "both"
+                )
+              }
+              aria-label="Seleziona paesi per le festività"
+              className="h-9 w-[120px]"
+            >
+              <option value="both">IT + DE</option>
+              <option value="IT">Italia</option>
+              <option value="DE">Germania</option>
+            </Select>
+          </div>
+
           {viewMode === "month" ? (
             <>
               <Button
@@ -328,6 +360,7 @@ export function CalendarView({
           events={events}
           weekdays={weekdays}
           loading={loading}
+          holidayCountries={holidayCountries}
           onEventClick={handleEventClick}
         />
       ) : (
@@ -336,6 +369,7 @@ export function CalendarView({
           events={events}
           weekdays={weekdays}
           loading={loading}
+          holidayCountries={holidayCountries}
           onEventClick={handleEventClick}
         />
       )}

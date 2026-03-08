@@ -19,6 +19,7 @@ import {
 interface AuthContextValue {
   authenticated: boolean;
   userId?: string;
+  userName?: string | null;
   needsName?: boolean;
   needsAffidamentoColor?: boolean;
   authReady: boolean;
@@ -34,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [authenticated, setAuthenticated] = useState(false);
   const [userId, setUserId] = useState<string | undefined>();
+  const [userName, setUserName] = useState<string | null | undefined>();
   const [needsName, setNeedsName] = useState<boolean | undefined>();
   const [needsAffidamentoColor, setNeedsAffidamentoColor] = useState<
     boolean | undefined
@@ -45,11 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await getSession();
       setAuthenticated(data.authenticated);
       setUserId(data.userId);
+      setUserName(data.nome ?? null);
       setNeedsName(data.needsName);
       setNeedsAffidamentoColor(data.needsAffidamentoColor);
     } catch {
       setAuthenticated(false);
       setUserId(undefined);
+      setUserName(undefined);
       setNeedsName(undefined);
       setNeedsAffidamentoColor(undefined);
     }
@@ -86,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await apiLogout();
     setAuthenticated(false);
     setUserId(undefined);
+    setUserName(undefined);
     setNeedsName(undefined);
     setNeedsAffidamentoColor(undefined);
     router.push("/");
@@ -96,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextValue = {
     authenticated,
     userId,
+    userName,
     needsName,
     needsAffidamentoColor,
     authReady,

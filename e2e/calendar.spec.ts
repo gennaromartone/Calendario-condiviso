@@ -6,7 +6,7 @@
  */
 import { test, expect } from "@playwright/test";
 import { format, addMonths } from "date-fns";
-import { E2E_USERS, ensureLoggedIn } from "./helpers";
+import { E2E_USERS, ensureLoggedIn, logout } from "./helpers";
 
 test.describe("T17 — Visualizzazione calendario e colori", () => {
   test.beforeEach(async ({ page }) => {
@@ -41,7 +41,7 @@ test.describe("T17 — Visualizzazione calendario e colori", () => {
     await page.goto(`/calendar?year=${year}&month=${month}`);
     await expect(page.getByText(titolo)).toBeVisible({ timeout: 5000 });
 
-    await page.getByRole("button", { name: "Esci" }).click();
+    await logout(page);
     await ensureLoggedIn(page, {
       password: E2E_USERS.user2.password,
       nome: E2E_USERS.user2.nome,

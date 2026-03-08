@@ -15,6 +15,7 @@ export type EventRecord = {
   dataInizio: string;
   dataFine: string;
   tipo: "affidamento" | "scuola" | "sport" | "altro";
+  luogo?: string;
   note?: EventNotes | null;
   creatoDa: string;
   creatoIl: string;
@@ -28,6 +29,7 @@ export type CreateEventInput = {
   dataInizio: string;
   dataFine: string;
   tipo: EventRecord["tipo"];
+  luogo?: string;
   note?: EventNotes | null;
 };
 
@@ -139,6 +141,7 @@ export async function logout(): Promise<void> {
 export async function getSession(): Promise<{
   authenticated: boolean;
   userId?: string;
+  nome?: string | null;
   needsName?: boolean;
   needsAffidamentoColor?: boolean;
 }> {

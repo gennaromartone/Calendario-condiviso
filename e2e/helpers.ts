@@ -67,3 +67,12 @@ export async function ensureLoggedIn(
   await expect(page.getByRole("heading", { name: "Calendario" })).toBeVisible();
   await expect(page.getByRole("button", { name: /nuovo evento/i })).toBeVisible();
 }
+
+/**
+ * Logs out by opening the user menu and clicking Esci.
+ */
+export async function logout(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Menu azioni" }).click();
+  await page.getByRole("menuitem", { name: "Esci" }).click();
+  await expect(page).toHaveURL("/");
+}

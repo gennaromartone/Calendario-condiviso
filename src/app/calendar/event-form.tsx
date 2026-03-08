@@ -85,6 +85,7 @@ export function EventForm({
         dataFineDate: toDateInputValue(event.dataFine),
         dataFineTime: toTimeInputValue(event.dataFine),
         tipo: event.tipo,
+        luogo: event.luogo ?? "",
         noteGeneral: event.note?.general ?? "",
         noteByDay: event.note?.byDay ?? {},
       }
@@ -96,6 +97,7 @@ export function EventForm({
         dataFineDate: format(new Date(), "yyyy-MM-dd"),
         dataFineTime: "10:00",
         tipo: "affidamento",
+        luogo: "",
         noteGeneral: "",
         noteByDay: {},
       };
@@ -157,6 +159,25 @@ export function EventForm({
                 <Textarea
                   placeholder="Descrizione (opzionale)"
                   rows={3}
+                  className="min-h-[44px]"
+                  {...field}
+                  value={field.value ?? ""}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="luogo"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Luogo (opzionale)</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Es. Via Roma 1, Milano"
                   className="min-h-[44px]"
                   {...field}
                   value={field.value ?? ""}

@@ -22,6 +22,7 @@ export const createEventSchema = z.object({
   dataFine: z.string().datetime(),
   tipo: eventoTipoEnum,
   note: eventNotesSchema.nullable().optional(),
+  luogo: z.string().max(500).optional(),
 });
 
 export const updateEventSchema = createEventSchema.partial();
@@ -41,6 +42,7 @@ export const eventFormSchema = z
     tipo: eventoTipoEnum,
     noteGeneral: z.string().optional(),
     noteByDay: z.record(z.string(), z.string().optional()).optional(),
+    luogo: z.string().max(500).optional(),
   })
   .refine(
     (data) => {
@@ -77,5 +79,6 @@ export function eventFormToApiPayload(values: EventFormValues): CreateEventInput
     dataFine: new Date(`${values.dataFineDate}T${values.dataFineTime}`).toISOString(),
     tipo: values.tipo,
     ...(note !== null ? { note } : { note: null }),
+    luogo: values.luogo?.trim() || undefined,
   };
 }

@@ -10,6 +10,7 @@ export type EventRecord = {
   dataInizio: string;
   dataFine: string;
   tipo: "affidamento" | "scuola" | "sport" | "altro";
+  luogo?: string;
   note?: EventNotes | null;
   creatoDa?: string;
   creatore?: { nome: string | null; affidamentoColore: string | null } | null;

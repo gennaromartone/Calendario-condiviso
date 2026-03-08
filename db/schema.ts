@@ -44,6 +44,7 @@ export const eventi = sqliteTable("eventi", {
     .notNull()
     .references(() => utenti.id),
   note: text("note"),
+  luogo: text("luogo"),
   creatoIl: text("creato_il")
     .$defaultFn(() => new Date().toISOString())
     .notNull(),

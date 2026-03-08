@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
       dataFine: eventi.dataFine,
       tipo: eventi.tipo,
       note: eventi.note,
+      luogo: eventi.luogo,
       creatoDa: eventi.creatoDa,
       creatoIl: eventi.creatoIl,
       modificatoIl: eventi.modificatoIl,
@@ -60,6 +61,7 @@ export async function GET(request: NextRequest) {
         dataFine: r.dataFine,
         tipo: r.tipo,
         note,
+        luogo: r.luogo,
         creatoDa: r.creatoDa,
         creatoIl: r.creatoIl,
         modificatoIl: r.modificatoIl,
@@ -104,6 +106,7 @@ export async function POST(request: NextRequest) {
       dataFine: parsed.data.dataFine,
       tipo: parsed.data.tipo,
       note: noteJson,
+      luogo: parsed.data.luogo ?? null,
       creatoDa: sessionResult.userId!,
     })
     .returning();

@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { EVENT_TIPO_CONFIG } from "@/lib/event-types";
 import type { EventRecord } from "./calendar-utils";
-import { Pencil, Trash2 } from "lucide-react";
+import { MapPin, Pencil, Trash2 } from "lucide-react";
 import { DeleteAlertDialog } from "./delete-confirm-dialog";
 import { deleteEvent } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -205,6 +205,24 @@ export function EventDetailSheet({
                   <p className="text-sm leading-relaxed">
                     {event.descrizione}
                   </p>
+                </div>
+              )}
+
+              {event.luogo && (
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Luogo
+                  </p>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.luogo)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Apri posizione su Google Maps"
+                    className="inline-flex items-center gap-2 text-primary hover:underline"
+                  >
+                    <MapPin className="size-4 shrink-0" aria-hidden />
+                    {event.luogo}
+                  </a>
                 </div>
               )}
 

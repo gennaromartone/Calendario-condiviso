@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { EVENT_TIPO_CONFIG } from "@/lib/event-types";
 import { hasNotesForDate, type EventRecord } from "./calendar-utils";
-import { FileText } from "lucide-react";
+import { FileText, MapPin } from "lucide-react";
 
 /** Hex to rgba with alpha for background */
 function hexToRgba(hex: string, alpha: number): string {
@@ -84,6 +84,12 @@ export function EventBlock({
           <Icon className="mr-0.5 size-3" aria-hidden />
           {tipoConfig.label}
         </Badge>
+        {event.luogo && (
+          <MapPin
+            className="size-3.5 shrink-0 text-muted-foreground"
+            aria-hidden
+          />
+        )}
         {showStartTag && (
           <Badge
             variant="secondary"

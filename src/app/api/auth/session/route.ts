@@ -22,6 +22,7 @@ export async function GET() {
   return NextResponse.json({
     authenticated: true,
     userId: user.id,
+    nome: user.nome ?? null,
     needsName: !user.nome,
     needsAffidamentoColor: !user.affidamentoColore,
   });

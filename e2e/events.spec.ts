@@ -7,7 +7,7 @@
  */
 import { test, expect, type Page } from "@playwright/test";
 import { format, addMonths } from "date-fns";
-import { E2E_USERS, ensureLoggedIn } from "./helpers";
+import { E2E_USERS, ensureLoggedIn, logout } from "./helpers";
 
 function futureDate(daysOffset: number) {
   const d = addMonths(new Date(), 1);
@@ -113,8 +113,7 @@ test.describe("T16 — CRUD eventi", () => {
     await goToMonth(page, year, month);
     await expect(page.getByText(titolo)).toBeVisible({ timeout: 5000 });
 
-    await page.getByRole("button", { name: "Esci" }).click();
-    await expect(page).toHaveURL("/");
+    await logout(page);
 
     await ensureLoggedIn(page, {
       password: E2E_USERS.user2.password,
