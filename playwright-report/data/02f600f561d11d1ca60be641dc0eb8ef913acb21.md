@@ -1,0 +1,153 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - link [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+    - text: Salta al contenuto principale
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - heading [level=1] [ref=e6]: Calendario
+        - paragraph [ref=e7]: Vista mensile, settimanale e dettaglio evento
+      - navigation [ref=e8]:
+        - generic [ref=e9]:
+          - button [ref=e10]:
+            - img
+            - text: Esporta backup
+          - button [ref=e11]:
+            - img
+            - text: Carica backup
+        - link [ref=e12] [cursor=pointer]:
+          - /url: /admin
+          - text: Admin
+        - button [ref=e13]: Esci
+    - main [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - heading [level=2] [ref=e17]: Marzo 2026
+          - generic [ref=e18]:
+            - button [ref=e19]:
+              - img
+              - text: Nuovo evento
+            - group [ref=e20]:
+              - button [pressed] [ref=e21]: Mese
+              - button [ref=e22]: Settimana
+            - button [ref=e23]:
+              - img
+              - text: Precedente
+            - button [ref=e24]:
+              - text: Successivo
+              - img
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - generic [ref=e28]: Lun
+            - generic [ref=e29]: Mar
+            - generic [ref=e30]: Mer
+            - generic [ref=e31]: Gio
+            - generic [ref=e32]: Ven
+            - generic [ref=e33]: Sab
+            - generic [ref=e34]: Dom
+          - generic [ref=e35]:
+            - generic [ref=e37]: "23"
+            - generic [ref=e39]: "24"
+            - generic [ref=e41]: "25"
+            - generic [ref=e43]: "26"
+            - generic [ref=e45]: "27"
+            - generic [ref=e47]: "28"
+            - generic [ref=e49]: "1"
+            - generic [ref=e51]: "2"
+            - generic [ref=e53]: "3"
+            - generic [ref=e55]: "4"
+            - generic [ref=e57]: "5"
+            - generic [ref=e59]: "6"
+            - generic [ref=e61]: "7"
+            - generic [ref=e62]:
+              - generic [ref=e63]: "8"
+              - button [ref=e65]:
+                - generic [ref=e66]: DA GENNARO
+                - generic [ref=e67]:
+                  - img [ref=e68]
+                  - text: Affidamento
+            - generic [ref=e72]: "9"
+            - generic [ref=e74]: "10"
+            - generic [ref=e76]: "11"
+            - generic [ref=e78]: "12"
+            - generic [ref=e80]: "13"
+            - generic [ref=e82]: "14"
+            - generic [ref=e84]: "15"
+            - generic [ref=e86]: "16"
+            - generic [ref=e88]: "17"
+            - generic [ref=e90]: "18"
+            - generic [ref=e92]: "19"
+            - generic [ref=e94]: "20"
+            - generic [ref=e96]: "21"
+            - generic [ref=e98]: "22"
+            - generic [ref=e100]: "23"
+            - generic [ref=e102]: "24"
+            - generic [ref=e104]: "25"
+            - generic [ref=e106]: "26"
+            - generic [ref=e108]: "27"
+            - generic [ref=e110]: "28"
+            - generic [ref=e112]: "29"
+            - generic [ref=e114]: "30"
+            - generic [ref=e116]: "31"
+            - generic [ref=e118]: "1"
+            - generic [ref=e120]: "2"
+            - generic [ref=e122]: "3"
+            - generic [ref=e124]: "4"
+            - generic [ref=e126]: "5"
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e132] [cursor=pointer]:
+    - img [ref=e133]
+  - alert [ref=e136]
+  - dialog [ref=e140]:
+    - button [ref=e141]:
+      - img [ref=e142]
+    - generic [ref=e145]:
+      - heading [level=2] [ref=e146]: Nuovo evento
+      - paragraph [ref=e147]: Compila i campi per creare un nuovo evento
+    - generic [ref=e149]:
+      - generic [ref=e150]:
+        - generic [ref=e151]: Titolo
+        - textbox [ref=e152]:
+          - /placeholder: Titolo evento
+          - text: Affidamento Verde E2E
+      - generic [ref=e153]:
+        - generic [ref=e154]: Descrizione
+        - textbox [ref=e155]:
+          - /placeholder: Descrizione (opzionale)
+      - generic [ref=e156]:
+        - generic [ref=e157]:
+          - generic [ref=e158]: Data inizio
+          - textbox [ref=e159]: 2026-04-16
+        - generic [ref=e160]:
+          - generic [ref=e161]: Ora inizio
+          - textbox [ref=e162]: 09:00
+      - generic [ref=e163]:
+        - generic [ref=e164]:
+          - generic [ref=e165]: Data fine
+          - textbox [ref=e166]: 2026-04-16
+        - generic [ref=e167]:
+          - generic [ref=e168]: Ora fine
+          - textbox [ref=e169]: 10:00
+      - generic [ref=e170]:
+        - generic [ref=e171]: Tipo
+        - combobox [ref=e172]
+      - button [ref=e175]: Crea evento
+  - dialog "Scegli il tuo colore Affidamento" [ref=e180]:
+    - heading "Scegli il tuo colore Affidamento" [level=2] [ref=e181]
+    - paragraph [ref=e182]: Seleziona un colore per identificare i tuoi eventi di affidamento sul calendario. I colori già usati da altri genitori non sono disponibili.
+    - group "Colori disponibili" [ref=e183]:
+      - button "Seleziona colore verde" [active] [ref=e184]
+      - button "Seleziona colore viola" [ref=e185]
+      - button "Seleziona colore arancione" [ref=e186]
+      - button "Seleziona colore rosa" [ref=e187]
+      - button "Seleziona colore teal" [ref=e188]
+      - button "Seleziona colore ambra" [ref=e189]
+      - button "Seleziona colore smeraldo" [ref=e190]
+      - button "Seleziona colore rosso" [ref=e191]
+    - generic [ref=e192]:
+      - button "Annulla" [ref=e193]
+      - button "Conferma" [disabled]
+```

@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "turso",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1772963032362,
+      "tag": "0000_dusty_silvermane",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1772966867289,
+      "tag": "0001_odd_vertigo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1772975109102,
+      "tag": "0002_moaning_nightshade",
+      "breakpoints": true
+    }
+  ]
+}
