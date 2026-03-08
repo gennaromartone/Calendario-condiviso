@@ -49,6 +49,7 @@ export function CalendarHeaderActions() {
               "truncate max-w-[120px] sm:max-w-[180px]",
               "text-foreground"
             )}
+            aria-hidden
           >
             {displayName}
           </span>

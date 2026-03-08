@@ -107,16 +107,16 @@ export function WeeklyGrid({
                             "inline-flex size-8 cursor-default items-center justify-center gap-0.5 rounded-full text-sm font-medium",
                             "text-foreground"
                           )}
-                        />
+                          aria-label={holidayNames}
+                        >
+                          {date?.getDate() ?? ""}
+                          <PartyPopper
+                            className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400"
+                            aria-hidden
+                          />
+                        </span>
                       }
-                      aria-label={holidayNames}
-                    >
-                      {date?.getDate() ?? ""}
-                      <PartyPopper
-                        className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400"
-                        aria-hidden
-                      />
-                    </TooltipTrigger>
+                    />
                     <TooltipContent>
                       <p>{holidayNames}</p>
                     </TooltipContent>

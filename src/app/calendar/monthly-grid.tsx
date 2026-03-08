@@ -109,15 +109,15 @@ export function MonthlyGrid({
                             "font-medium text-foreground"
                           )}
                           aria-label={holidays.map((h) => h.name).join(", ")}
-                        />
+                        >
+                          {date.getDate()}
+                          <PartyPopper
+                            className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400"
+                            aria-hidden
+                          />
+                        </span>
                       }
-                    >
-                      {date.getDate()}
-                      <PartyPopper
-                        className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400"
-                        aria-hidden
-                      />
-                    </TooltipTrigger>
+                    />
                     <TooltipContent>
                       <p>
                         {holidays.map((h) => h.name).join(" · ")}
