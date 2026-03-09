@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/lib/auth-context";
 import { Providers } from "@/components/providers";
+import { PwaRegister } from "@/components/pwa-register";
+import { InstallPrompt } from "@/components/install-prompt";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,12 +20,18 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Calendario Condiviso",
   description: "Shared calendar for teams and families",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Calendario",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  themeColor: "#0a0a0a",
 };
 
 export default function RootLayout({
@@ -44,7 +52,9 @@ export default function RootLayout({
         </a>
         <AuthProvider>
           <Providers>
+            <PwaRegister />
             {children}
+            <InstallPrompt />
             <Toaster richColors position="top-center" />
           </Providers>
         </AuthProvider>
