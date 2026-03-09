@@ -1,10 +1,6 @@
 /**
- * Client-side API for calendar operations.
+ * Client-side API barrel.
  * Re-exports from domain-specific modules.
- * @see ./api/events-api
- * @see ./api/auth-api
- * @see ./api/backup-api
- * @see ./api/admin-api
  */
 
 export {
@@ -15,7 +11,7 @@ export {
   type EventRecord,
   type CreateEventInput,
   type EventNotes,
-} from "./api/events-api";
+} from "./events-api";
 
 export {
   isPasswordSet,
@@ -26,13 +22,13 @@ export {
   getColorsAvailable,
   type LoginResult,
   type ColorOption,
-} from "./api/auth-api";
+} from "./auth-api";
 
 export {
   exportBackup,
   downloadBackup,
   importBackup,
-} from "./api/backup-api";
+} from "./backup-api";
 
 export {
   getAdminStatus,
@@ -40,4 +36,4 @@ export {
   getAdminUsers,
   updateUserPassword,
   type AdminUser,
-} from "./api/admin-api";
+} from "./admin-api";

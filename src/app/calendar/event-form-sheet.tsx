@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   Sheet,
   SheetContent,
@@ -16,13 +16,11 @@ import type { EventRecord } from "./calendar-utils";
 import type { CreateEventInput } from "@/lib/validations/events";
 import { toast } from "sonner";
 import {
-  createEvent,
-  updateEvent,
-  deleteEvent,
   getColorsAvailable,
   completeProfile,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useEventMutations } from "@/hooks/use-event-mutations";
 interface EventFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -38,7 +36,6 @@ export function EventFormSheet({
   mode,
   currentUserId,
 }: EventFormSheetProps) {
-  const queryClient = useQueryClient();
   const { needsAffidamentoColor, refreshSession } = useAuth();
   const isOwner =
     mode === "create" ||
@@ -51,10 +48,16 @@ export function EventFormSheet({
   const [pendingCreateValues, setPendingCreateValues] =
     useState<CreateEventInput | null>(null);
 
-  const invalidateEvents = useCallback(
-    () => queryClient.invalidateQueries({ queryKey: ["events"] }),
-    [queryClient]
-  );
+  const handleMutationSuccess = useCallback(() => {
+    onOpenChange(false);
+  }, [onOpenChange]);
+
+  const {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    isLoading,
+  } = useEventMutations(handleMutationSuccess);
 
   const { data: availableColors = [] } = useQuery({
     queryKey: ["colors-available"],
@@ -62,56 +65,11 @@ export function EventFormSheet({
     enabled: open && mode === "create" && !!needsAffidamentoColor,
   });
 
-  const createMutation = useMutation({
-    mutationFn: createEvent,
-    onSuccess: () => {
-      invalidateEvents();
-      onOpenChange(false);
-      toast.success("Evento creato con successo");
-    },
-    onError: (e) => {
-      toast.error(e instanceof Error ? e.message : "Errore di rete");
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({
-      id,
-      input,
-    }: {
-      id: string;
-      input: Partial<CreateEventInput>;
-    }) => updateEvent(id, input),
-    onSuccess: (updated) => {
-      if (!updated) {
-        toast.error("Evento non trovato");
-        return;
-      }
-      invalidateEvents();
-      onOpenChange(false);
-      toast.success("Evento modificato con successo");
-    },
-    onError: (e) => {
-      toast.error(e instanceof Error ? e.message : "Errore di rete");
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteEvent,
-    onSuccess: (deleted) => {
-      if (!deleted) {
-        toast.error("Evento non trovato");
-        return;
-      }
-      invalidateEvents();
-      setDeleteDialogOpen(false);
-      onOpenChange(false);
-      toast.success("Evento eliminato");
-    },
-    onError: (e) => {
-      toast.error(e instanceof Error ? e.message : "Errore di rete");
-    },
-  });
+  const handleDelete = async () => {
+    if (!event) return;
+    await deleteMutation.mutateAsync(event.id);
+    setDeleteDialogOpen(false);
+  };
 
   const handleColorConfirm = useCallback(
     async (hex: string) => {
@@ -128,7 +86,7 @@ export function EventFormSheet({
     [pendingCreateValues, refreshSession, createMutation]
   );
 
-  const handleSubmit = async (values: CreateEventInput) => {
+  const handleSubmit = useCallback(async (values: CreateEventInput) => {
     if (mode === "create") {
       if (values.tipo === "affidamento" && needsAffidamentoColor) {
         setPendingCreateValues(values);
@@ -139,19 +97,12 @@ export function EventFormSheet({
     } else if (event) {
       await updateMutation.mutateAsync({ id: event.id, input: values });
     }
-  };
+  }, [mode, event, needsAffidamentoColor, createMutation, updateMutation]);
 
-  const handleDelete = async () => {
-    if (!event) return;
-    await deleteMutation.mutateAsync(event.id);
-  };
 
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true);
   };
-
-  const isLoading =
-    createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   const title = mode === "create" ? "Nuovo evento" : "Modifica evento";
   const description =

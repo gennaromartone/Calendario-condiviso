@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { ne, count } from "drizzle-orm";
-import { db } from "@/lib/db";
-import { utenti } from "@/db/schema";
 import { requireSession } from "@/lib/session";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { getClientIp, shouldBypassRateLimit } from "@/lib/request-utils";
+import { userRepository } from "@/lib/repositories";
 
 export type AdminUser = {
   id: string;
@@ -12,38 +12,30 @@ export type AdminUser = {
 };
 
 export async function GET() {
-  const [{ value: realUserCount }] = await db
-    .select({ value: count() })
-    .from(utenti)
-    .where(ne(utenti.id, "migrated-legacy"));
-
-  const hasRealUsers = (realUserCount ?? 0) > 0;
+  const realUserCount = await userRepository.countExcludingLegacy();
+  const hasRealUsers = realUserCount > 0;
 
   if (hasRealUsers) {
     const sessionResult = await requireSession();
     if (sessionResult instanceof Response) return sessionResult;
   }
 
-  const rows = await db
-    .select({
-      id: utenti.id,
-      nome: utenti.nome,
-      creatoIl: utenti.creatoIl,
-    })
-    .from(utenti)
-    .where(ne(utenti.id, "migrated-legacy"))
-    .orderBy(utenti.creatoIl);
-
-  const users: AdminUser[] = rows.map((r) => ({
+  const allUsers = await userRepository.findAllWithPasswordHash();
+  const users: AdminUser[] = allUsers.map((r) => ({
     id: r.id,
     nome: r.nome,
-    creatoIl: r.creatoIl,
+    creatoIl: r.creatoIl ?? "",
   }));
 
   return NextResponse.json(users);
 }
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  if (!shouldBypassRateLimit(ip)) {
+    const { allowed, retryAfter } = checkRateLimit(ip, "admin-users");
+    if (!allowed) return rateLimitResponse(retryAfter);
+  }
   const body = await request.json();
   const password = typeof body?.password === "string" ? body.password : "";
 
@@ -60,12 +52,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const [{ value: realUserCount }] = await db
-    .select({ value: count() })
-    .from(utenti)
-    .where(ne(utenti.id, "migrated-legacy"));
-
-  const hasRealUsers = (realUserCount ?? 0) > 0;
+  const realUserCount = await userRepository.countExcludingLegacy();
+  const hasRealUsers = realUserCount > 0;
 
   if (hasRealUsers) {
     const sessionResult = await requireSession();
@@ -73,19 +61,10 @@ export async function POST(request: NextRequest) {
   }
 
   const passwordHash = await bcrypt.hash(password.trim(), 10);
-  const now = new Date().toISOString();
-
-  const [inserted] = await db
-    .insert(utenti)
-    .values({
-      passwordHash,
-      creatoIl: now,
-      modificatoIl: now,
-    })
-    .returning();
+  const { id } = await userRepository.create({ passwordHash });
 
   return NextResponse.json({
-    id: inserted.id,
+    id,
     message: "Genitore aggiunto. Può accedere con la propria parola d'ordine.",
   });
 }

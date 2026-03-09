@@ -1,20 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db";
-import { utenti } from "@/db/schema";
 import { requireSession } from "@/lib/session";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { getClientIp, shouldBypassRateLimit } from "@/lib/request-utils";
+import { userRepository } from "@/lib/repositories";
 
 export async function PATCH(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const ip = getClientIp(request);
+  if (!shouldBypassRateLimit(ip)) {
+    const { allowed, retryAfter } = checkRateLimit(ip, "admin-users");
+    if (!allowed) return rateLimitResponse(retryAfter);
+  }
   const sessionResult = await requireSession();
   if (sessionResult instanceof Response) return sessionResult;
 
   const { id } = await params;
 
-  const body = await _request.json();
+  const body = await request.json();
   const password = typeof body?.password === "string" ? body.password : "";
 
   if (!password.trim()) {
@@ -30,10 +35,7 @@ export async function PATCH(
     );
   }
 
-  const [existing] = await db
-    .select({ id: utenti.id })
-    .from(utenti)
-    .where(eq(utenti.id, id));
+  const existing = await userRepository.findById(id);
 
   if (!existing) {
     return NextResponse.json({ error: "Utente non trovato" }, { status: 404 });
@@ -47,12 +49,7 @@ export async function PATCH(
   }
 
   const passwordHash = await bcrypt.hash(password.trim(), 10);
-  const now = new Date().toISOString();
-
-  await db
-    .update(utenti)
-    .set({ passwordHash, modificatoIl: now })
-    .where(eq(utenti.id, id));
+  await userRepository.updatePassword(id, passwordHash);
 
   return NextResponse.json({
     message: "Parola d'ordine aggiornata con successo",

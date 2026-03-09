@@ -1,52 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { findUserByPassword } from "@/lib/auth";
 import { setSession } from "@/lib/session";
-import { checkRateLimit } from "@/lib/rate-limit";
-
-function getClientIp(request: NextRequest): string {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "unknown"
-  );
-}
-
-function shouldBypassRateLimit(ip: string): boolean {
-  const localhostIps = [
-    "127.0.0.1",
-    "::1",
-    "::ffff:127.0.0.1",
-    "localhost",
-  ];
-  if (localhostIps.includes(ip)) return true;
-  // When headers missing (e.g. direct localhost), IP can be "unknown"
-  if (ip === "unknown" && process.env.NODE_ENV === "development") return true;
-  return false;
-}
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { getClientIp, shouldBypassRateLimit } from "@/lib/request-utils";
+import { loginUseCase } from "@/lib/use-cases";
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
   const { allowed, retryAfter } = shouldBypassRateLimit(ip)
     ? { allowed: true }
-    : checkRateLimit(ip);
+    : checkRateLimit(ip, "login");
 
-  if (!allowed) {
-    return NextResponse.json(
-      {
-        error: "Troppi tentativi. Riprova più tardi.",
-        retryAfter,
-      },
-      {
-        status: 429,
-        headers: retryAfter
-          ? { "Retry-After": String(retryAfter) }
-          : undefined,
-      }
-    );
-  }
+  if (!allowed) return rateLimitResponse(retryAfter);
 
   const body = await request.json();
   const password = typeof body?.password === "string" ? body.password : "";
+  const identifier =
+    typeof body?.identifier === "string" ? body.identifier : undefined;
 
   if (!password.trim()) {
     return NextResponse.json(
@@ -55,20 +24,23 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const user = await findUserByPassword(password.trim());
+  const result = await loginUseCase.execute({
+    password: password.trim(),
+    identifier,
+  });
 
-  if (!user) {
+  if (!result.success) {
     return NextResponse.json(
       { error: "Parola d'ordine non riconosciuta" },
       { status: 401 }
     );
   }
 
-  await setSession(user.id);
+  await setSession(result.user.id);
 
   return NextResponse.json({
-    userId: user.id,
-    needsName: !user.nome,
-    needsAffidamentoColor: !user.affidamentoColore,
+    userId: result.user.id,
+    needsName: !result.user.nome,
+    needsAffidamentoColor: !result.user.affidamentoColore,
   });
 }

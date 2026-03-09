@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "test": "node --import tsx --test src/app/calendar/__tests__/calendar-utils.test.ts src/lib/__tests__/holidays.test.ts src/lib/validations/__tests__/events.test.ts",
     "test:e2e": "npx playwright test",
     "test:e2e:ui": "npx playwright test --ui",
     "build": "next build",

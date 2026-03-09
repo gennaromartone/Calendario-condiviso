@@ -1,11 +1,25 @@
 /**
- * In-memory rate limiter for login attempts.
- * 5 attempts per 15 minutes per IP.
- * Resets on server restart.
+ * In-memory rate limiter for API endpoints.
+ * Configurable per-endpoint limits. Resets on server restart.
  */
 
-const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const MAX_ATTEMPTS = 5;
+import { NextResponse } from "next/server";
+
+export type RateLimitPrefix =
+  | "login"
+  | "backup"
+  | "admin-users"
+  | "events";
+
+const LIMITS: Record<
+  RateLimitPrefix,
+  { windowMs: number; maxAttempts: number }
+> = {
+  login: { windowMs: 15 * 60 * 1000, maxAttempts: 5 },
+  backup: { windowMs: 15 * 60 * 1000, maxAttempts: 10 },
+  "admin-users": { windowMs: 15 * 60 * 1000, maxAttempts: 5 },
+  events: { windowMs: 2 * 60 * 1000, maxAttempts: 30 },
+};
 
 interface Entry {
   count: number;
@@ -23,23 +37,28 @@ function cleanup() {
   }
 }
 
-export function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
+export function checkRateLimit(
+  ip: string,
+  prefix: RateLimitPrefix = "login"
+): { allowed: boolean; retryAfter?: number } {
+  const { windowMs, maxAttempts } = LIMITS[prefix];
+  const key = `${prefix}:${ip}`;
   const now = Date.now();
-  const entry = store.get(ip);
+  const entry = store.get(key);
 
   if (!entry) {
-    store.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    store.set(key, { count: 1, resetAt: now + windowMs });
     return { allowed: true };
   }
 
   if (entry.resetAt < now) {
-    store.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    store.set(key, { count: 1, resetAt: now + windowMs });
     return { allowed: true };
   }
 
   entry.count += 1;
 
-  if (entry.count > MAX_ATTEMPTS) {
+  if (entry.count > maxAttempts) {
     return {
       allowed: false,
       retryAfter: Math.ceil((entry.resetAt - now) / 1000),
@@ -52,4 +71,14 @@ export function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: num
 // Run cleanup every 5 minutes
 if (typeof setInterval !== "undefined") {
   setInterval(cleanup, 5 * 60 * 1000);
+}
+
+export function rateLimitResponse(retryAfter?: number) {
+  return NextResponse.json(
+    { error: "Troppi tentativi. Riprova più tardi.", retryAfter },
+    {
+      status: 429,
+      headers: retryAfter ? { "Retry-After": String(retryAfter) } : undefined,
+    }
+  );
 }

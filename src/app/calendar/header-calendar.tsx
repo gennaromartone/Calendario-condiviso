@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EventDetailSheet } from "./event-detail-sheet";
 import { EventFormSheet } from "./event-form-sheet";
 import type { EventRecord } from "./calendar-utils";
+import { useCalendarModalState } from "@/hooks/use-calendar-modal-state";
 
 type ViewMode = "month" | "week";
 
@@ -36,41 +36,17 @@ export function HeaderCalendar({
   onNext,
   children,
 }: HeaderCalendarProps) {
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [formSheetOpen, setFormSheetOpen] = useState(false);
-  const [formSheetMode, setFormSheetMode] = useState<"create" | "edit">("create");
-  const [formSheetEvent, setFormSheetEvent] = useState<EventRecord | null>(null);
-
-  const modalActions = useMemo<CalendarModalActions>(
-    () => ({
-      openDetail: (eventId: string) => setSelectedEventId(eventId),
-      openForm: () => {
-        setFormSheetMode("create");
-        setFormSheetEvent(null);
-        setFormSheetOpen(true);
-      },
-    }),
-    []
-  );
-
-  const selectedEvent = useMemo(
-    () =>
-      selectedEventId
-        ? events.find((e) => e.id === selectedEventId) ?? null
-        : null,
-    [events, selectedEventId]
-  );
-
-  const handleDetailOpenChange = useCallback((open: boolean) => {
-    if (!open) setSelectedEventId(null);
-  }, []);
-
-  const handleModifyEvent = useCallback((event: EventRecord) => {
-    setSelectedEventId(null);
-    setFormSheetMode("edit");
-    setFormSheetEvent(event);
-    setFormSheetOpen(true);
-  }, []);
+  const {
+    selectedEvent,
+    selectedEventId,
+    formSheetOpen,
+    setFormSheetOpen,
+    formSheetMode,
+    formSheetEvent,
+    modalActions,
+    handleDetailOpenChange,
+    handleModifyEvent,
+  } = useCalendarModalState(events);
 
   return (
     <>

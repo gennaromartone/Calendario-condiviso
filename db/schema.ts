@@ -10,6 +10,8 @@ export const utenti = sqliteTable(
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
     passwordHash: text("password_hash").notNull(),
+    /** Optional unique identifier for login lookup (avoids iterating all users) */
+    loginIdentifier: text("login_identifier"),
     nome: text("nome"),
     affidamentoColore: text("affidamento_colore"),
     creatoIl: text("creato_il")
@@ -21,6 +23,7 @@ export const utenti = sqliteTable(
   },
   (table) => ({
     affidamentoColoreUnique: unique().on(table.affidamentoColore),
+    loginIdentifierUnique: unique().on(table.loginIdentifier),
   })
 );
 

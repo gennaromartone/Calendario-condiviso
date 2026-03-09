@@ -1,19 +1,13 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { utenti } from "@/db/schema";
-import { count, ne } from "drizzle-orm";
+import { userRepository } from "@/lib/repositories";
 
 /**
  * Returns whether users exist (v2: replaces shared password check).
  * Used by login page to show "configure on /admin" when no users.
  */
 export async function GET() {
-  const [{ value: realUserCount }] = await db
-    .select({ value: count() })
-    .from(utenti)
-    .where(ne(utenti.id, "migrated-legacy"));
-
+  const count = await userRepository.countExcludingLegacy();
   return NextResponse.json({
-    isPasswordSet: (realUserCount ?? 0) > 0,
+    isPasswordSet: count > 0,
   });
 }

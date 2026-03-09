@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { config, eventi } from "@/db/schema";
 import { requireSession } from "@/lib/session";
 import { createEventSchema } from "@/lib/validations/events";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { getClientIp, shouldBypassRateLimit } from "@/lib/request-utils";
 import { eq } from "drizzle-orm";
 
 const EVENT_TIPOS = ["affidamento", "scuola", "sport", "altro"] as const;
@@ -32,7 +34,12 @@ function isValidEvent(raw: unknown): raw is StoredEvent {
   );
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const ip = getClientIp(request);
+  if (!shouldBypassRateLimit(ip)) {
+    const { allowed, retryAfter } = checkRateLimit(ip, "backup");
+    if (!allowed) return rateLimitResponse(retryAfter);
+  }
   const sessionResult = await requireSession();
   if (sessionResult instanceof Response) return sessionResult;
 
@@ -58,6 +65,11 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  if (!shouldBypassRateLimit(ip)) {
+    const { allowed, retryAfter } = checkRateLimit(ip, "backup");
+    if (!allowed) return rateLimitResponse(retryAfter);
+  }
   const sessionResult = await requireSession();
   if (sessionResult instanceof Response) return sessionResult;
 

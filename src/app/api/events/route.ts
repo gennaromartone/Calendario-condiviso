@@ -1,83 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { eventi, utenti } from "@/db/schema";
 import { requireSession } from "@/lib/session";
 import { createEventSchema } from "@/lib/validations/events";
-import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { getClientIp, shouldBypassRateLimit } from "@/lib/request-utils";
+import { getEventsUseCase, createEventUseCase } from "@/lib/use-cases";
 
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request);
+  if (!shouldBypassRateLimit(ip)) {
+    const { allowed, retryAfter } = checkRateLimit(ip, "events");
+    if (!allowed) return rateLimitResponse(retryAfter);
+  }
   const sessionResult = await requireSession();
   if (sessionResult instanceof Response) return sessionResult;
 
   const { searchParams } = new URL(request.url);
-  const start = searchParams.get("start");
-  const end = searchParams.get("end");
+  const start = searchParams.get("start") ?? undefined;
+  const end = searchParams.get("end") ?? undefined;
 
-  const whereClause =
-    start && end
-      ? and(
-          lte(eventi.dataInizio, end),
-          gte(eventi.dataFine, start)
-        )
-      : sql`1=1`;
-
-  const rows = await db
-    .select({
-      id: eventi.id,
-      titolo: eventi.titolo,
-      descrizione: eventi.descrizione,
-      dataInizio: eventi.dataInizio,
-      dataFine: eventi.dataFine,
-      tipo: eventi.tipo,
-      note: eventi.note,
-      luogo: eventi.luogo,
-      creatoDa: eventi.creatoDa,
-      creatoIl: eventi.creatoIl,
-      modificatoIl: eventi.modificatoIl,
-      creatoreNome: utenti.nome,
-      creatoreAffidamentoColore: utenti.affidamentoColore,
-      creatoreId: utenti.id,
-    })
-    .from(eventi)
-    .leftJoin(utenti, eq(eventi.creatoDa, utenti.id))
-    .where(whereClause)
-    .orderBy(eventi.dataInizio);
-
-  return NextResponse.json(
-    rows.map((r) => {
-      let note: { general?: string; byDay?: Record<string, string> } | null = null;
-      if (r.note) {
-        try {
-          note = typeof r.note === "string" ? JSON.parse(r.note) : r.note;
-        } catch {
-          note = null;
-        }
-      }
-      return {
-        id: r.id,
-        titolo: r.titolo,
-        descrizione: r.descrizione,
-        dataInizio: r.dataInizio,
-        dataFine: r.dataFine,
-        tipo: r.tipo,
-        note,
-        luogo: r.luogo,
-        creatoDa: r.creatoDa,
-        creatoIl: r.creatoIl,
-        modificatoIl: r.modificatoIl,
-        creatore:
-          r.creatoreId != null
-            ? {
-                nome: r.creatoreNome ?? null,
-                affidamentoColore: r.creatoreAffidamentoColore ?? null,
-              }
-            : null,
-      };
-    })
-  );
+  const events = await getEventsUseCase.execute({ start, end });
+  return NextResponse.json(events);
 }
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  if (!shouldBypassRateLimit(ip)) {
+    const { allowed, retryAfter } = checkRateLimit(ip, "events");
+    if (!allowed) return rateLimitResponse(retryAfter);
+  }
   const sessionResult = await requireSession();
   if (sessionResult instanceof Response) return sessionResult;
 
@@ -97,29 +47,15 @@ export async function POST(request: NextRequest) {
       ? JSON.stringify(parsed.data.note)
       : null;
 
-  const [inserted] = await db
-    .insert(eventi)
-    .values({
-      titolo: parsed.data.titolo,
-      descrizione: parsed.data.descrizione ?? null,
-      dataInizio: parsed.data.dataInizio,
-      dataFine: parsed.data.dataFine,
-      tipo: parsed.data.tipo,
-      note: noteJson,
-      luogo: parsed.data.luogo ?? null,
-      creatoDa: sessionResult.userId!,
-    })
-    .returning();
-
-  const result = inserted
-    ? {
-        ...inserted,
-        note:
-          inserted.note && typeof inserted.note === "string"
-            ? (JSON.parse(inserted.note) as { general?: string; byDay?: Record<string, string> })
-            : inserted.note,
-      }
-    : inserted;
-
-  return NextResponse.json(result);
+  const event = await createEventUseCase.execute({
+    titolo: parsed.data.titolo,
+    descrizione: parsed.data.descrizione ?? null,
+    dataInizio: parsed.data.dataInizio,
+    dataFine: parsed.data.dataFine,
+    tipo: parsed.data.tipo,
+    note: noteJson,
+    luogo: parsed.data.luogo ?? null,
+    creatoDa: sessionResult.userId!,
+  });
+  return NextResponse.json(event);
 }

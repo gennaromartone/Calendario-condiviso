@@ -1,23 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { eventi } from "@/db/schema";
 import { requireSession } from "@/lib/session";
 import { updateEventSchema } from "@/lib/validations/events";
-import { eq } from "drizzle-orm";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { getClientIp, shouldBypassRateLimit } from "@/lib/request-utils";
+import { eventRepository } from "@/lib/repositories";
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const ip = getClientIp(request);
+  if (!shouldBypassRateLimit(ip)) {
+    const { allowed, retryAfter } = checkRateLimit(ip, "events");
+    if (!allowed) return rateLimitResponse(retryAfter);
+  }
   const sessionResult = await requireSession();
   if (sessionResult instanceof Response) return sessionResult;
 
   const { id } = await params;
-  const [existing] = await db
-    .select({ creatoDa: eventi.creatoDa })
-    .from(eventi)
-    .where(eq(eventi.id, id))
-    .limit(1);
+  const existing = await eventRepository.findById(id);
 
   if (!existing) {
     return NextResponse.json({ error: "Evento non trovato" }, { status: 404 });
@@ -38,53 +39,28 @@ export async function PATCH(
     );
   }
 
-  const updateData = { ...parsed.data } as Record<string, unknown>;
-  if ("note" in updateData && updateData.note !== undefined) {
-    updateData.note =
-      updateData.note !== null && typeof updateData.note === "object"
-        ? JSON.stringify(updateData.note)
-        : updateData.note;
-  }
-
-  const [updated] = await db
-    .update(eventi)
-    .set({
-      ...updateData,
-      modificatoIl: new Date().toISOString(),
-    })
-    .where(eq(eventi.id, id))
-    .returning();
-
-  if (!updated) {
+  const result = await eventRepository.update(id, parsed.data);
+  if (!result) {
     return NextResponse.json({ error: "Evento non trovato" }, { status: 404 });
   }
-
-  const result = {
-    ...updated,
-    note:
-      updated.note && typeof updated.note === "string"
-        ? (JSON.parse(updated.note) as { general?: string; byDay?: Record<string, string> })
-        : updated.note,
-  };
-
   return NextResponse.json(result);
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const ip = getClientIp(request);
+  if (!shouldBypassRateLimit(ip)) {
+    const { allowed, retryAfter } = checkRateLimit(ip, "events");
+    if (!allowed) return rateLimitResponse(retryAfter);
+  }
   const sessionResult = await requireSession();
   if (sessionResult instanceof Response) return sessionResult;
 
   const { id } = await params;
 
-  const [existing] = await db
-    .select({ creatoDa: eventi.creatoDa })
-    .from(eventi)
-    .where(eq(eventi.id, id))
-    .limit(1);
-
+  const existing = await eventRepository.findById(id);
   if (!existing) {
     return NextResponse.json({ error: "Evento non trovato" }, { status: 404 });
   }
@@ -95,7 +71,7 @@ export async function DELETE(
     );
   }
 
-  await db.delete(eventi).where(eq(eventi.id, id));
+  await eventRepository.delete(id);
 
   return NextResponse.json({ success: true });
 }
