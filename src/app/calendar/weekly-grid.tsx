@@ -40,7 +40,7 @@ export function WeeklyGrid({
 }: WeeklyGridProps) {
   const weekDates = useMemo(
     () => getWeekDates(weekStart),
-    [weekStart.getTime()]
+    [weekStart]
   );
 
   const eventsByDate = useMemo(() => {

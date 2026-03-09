@@ -34,7 +34,8 @@ const SheetContent = React.forwardRef<
         className={cn(
           "fixed inset-0 z-50 bg-black/50",
           "data-starting-style:animate-in data-ending-style:animate-out",
-          "data-starting-style:fade-in-0 data-ending-style:fade-out-0"
+          "data-starting-style:fade-in-0 data-ending-style:fade-out-0",
+          "data-ending-style:duration-200 data-ending-style:fill-mode-forwards"
         )}
       />
       <Dialog.Popup
@@ -44,6 +45,7 @@ const SheetContent = React.forwardRef<
           "fixed z-50 flex flex-col gap-4 bg-background shadow-lg",
           "data-starting-style:animate-in data-ending-style:animate-out",
           "data-starting-style:duration-300 data-ending-style:duration-200",
+          "data-ending-style:fade-out-0 data-ending-style:fill-mode-forwards",
           side === "right" &&
             "inset-y-0 right-0 h-full w-full max-w-sm border-l sm:max-w-md",
           side === "right" &&
