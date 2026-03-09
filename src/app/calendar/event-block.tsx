@@ -24,6 +24,8 @@ interface EventBlockProps {
   showStartTag?: boolean;
   /** Mostra il tag "Fine" (solo per eventi multi-giorno) */
   showEndTag?: boolean;
+  /** Nasconde tutti i badge (mobile/tablet) */
+  compact?: boolean;
 }
 
 export function EventBlock({
@@ -33,6 +35,7 @@ export function EventBlock({
   dateKey,
   showStartTag,
   showEndTag,
+  compact = false,
 }: EventBlockProps) {
   const tipoConfig = EVENT_TIPO_CONFIG[event.tipo];
   const Icon = tipoConfig.icon;
@@ -65,58 +68,60 @@ export function EventBlock({
       }
     >
       <span className="truncate font-medium">{event.titolo}</span>
-      <div className="flex flex-wrap items-center gap-1">
-        <Badge
-          variant="secondary"
-          className={cn(
-            "w-fit text-[10px] capitalize",
-            !useCreatorColor && tipoConfig.color
+      {!compact && (
+        <div className="flex flex-wrap items-center gap-1">
+          <Badge
+            variant="secondary"
+            className={cn(
+              "w-fit text-[10px] capitalize",
+              !useCreatorColor && tipoConfig.color
+            )}
+            style={
+              useCreatorColor && creatorColor
+                ? {
+                    backgroundColor: hexToRgba(creatorColor, 0.2),
+                    color: creatorColor,
+                  }
+                : undefined
+            }
+          >
+            <Icon className="mr-0.5 size-3" aria-hidden />
+            {tipoConfig.label}
+          </Badge>
+          {event.luogo && (
+            <MapPin
+              className="size-3.5 shrink-0 text-muted-foreground"
+              aria-hidden
+            />
           )}
-          style={
-            useCreatorColor && creatorColor
-              ? {
-                  backgroundColor: hexToRgba(creatorColor, 0.2),
-                  color: creatorColor,
-                }
-              : undefined
-          }
-        >
-          <Icon className="mr-0.5 size-3" aria-hidden />
-          {tipoConfig.label}
-        </Badge>
-        {event.luogo && (
-          <MapPin
-            className="size-3.5 shrink-0 text-muted-foreground"
-            aria-hidden
-          />
-        )}
-        {showStartTag && (
-          <Badge
-            variant="secondary"
-            className="border-transparent bg-green-500/10 text-[10px] text-green-700 dark:text-green-400"
-          >
-            Inizio
-          </Badge>
-        )}
-        {showEndTag && (
-          <Badge
-            variant="secondary"
-            className="border-transparent bg-red-500/10 text-[10px] text-red-700 dark:text-red-400"
-          >
-            Fine
-          </Badge>
-        )}
-        {showNotesBadge && (
-          <Badge
-            variant="secondary"
-            className="border-transparent bg-amber-500/10 text-[10px] text-amber-700 dark:text-amber-400"
-            title="Ha note"
-          >
-            <FileText className="mr-0.5 size-3" aria-hidden />
-            Note
-          </Badge>
-        )}
-      </div>
+          {showStartTag && (
+            <Badge
+              variant="secondary"
+              className="border-transparent bg-green-500/10 text-[10px] text-green-700 dark:text-green-400"
+            >
+              Inizio
+            </Badge>
+          )}
+          {showEndTag && (
+            <Badge
+              variant="secondary"
+              className="border-transparent bg-red-500/10 text-[10px] text-red-700 dark:text-red-400"
+            >
+              Fine
+            </Badge>
+          )}
+          {showNotesBadge && (
+            <Badge
+              variant="secondary"
+              className="border-transparent bg-amber-500/10 text-[10px] text-amber-700 dark:text-amber-400"
+              title="Ha note"
+            >
+              <FileText className="mr-0.5 size-3" aria-hidden />
+              Note
+            </Badge>
+          )}
+        </div>
+      )}
     </button>
   );
 }

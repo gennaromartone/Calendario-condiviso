@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { PartyPopper } from "lucide-react";
 import { EventBlock } from "./event-block";
+import { EventStrip } from "./event-strip";
 import {
   getMonthGrid,
   getEventDateKeys,
@@ -67,6 +68,50 @@ export function MonthlyGrid({
     return map;
   }, [events]);
 
+  const multiDayStripsByWeek = useMemo(() => {
+    const result: { event: EventRecord; startCol: number; span: number; lane: number }[][] = [];
+    for (let w = 0; w < 6; w++) {
+      const weekCells = grid.slice(w * 7, w * 7 + 7);
+      const weekKeys = weekCells.map((c) => toDateKey(c.date));
+      const strips: { event: EventRecord; startCol: number; span: number }[] = [];
+      const multiDayEvents = events.filter(
+        (e) => getEventDateKeys(e).length > 1
+      );
+      for (const event of multiDayEvents) {
+        const eventKeys = getEventDateKeys(event);
+        const intersection = eventKeys.filter((k) => weekKeys.includes(k));
+        if (intersection.length > 0) {
+          const startCol = weekKeys.indexOf(intersection[0]) + 1;
+          const span = intersection.length;
+          strips.push({ event, startCol, span });
+        }
+      }
+      strips.sort((a, b) => a.startCol - b.startCol);
+      const lanes: { event: EventRecord; startCol: number; span: number }[][] = [];
+      for (const strip of strips) {
+        const endCol = strip.startCol + strip.span - 1;
+        let lane = 0;
+        while (
+          lanes[lane]?.some(
+            (s) =>
+              s.startCol + s.span - 1 >= strip.startCol &&
+              s.startCol <= endCol
+          )
+        ) {
+          lane++;
+        }
+        if (!lanes[lane]) lanes[lane] = [];
+        lanes[lane].push(strip);
+      }
+      result.push(
+        lanes.flatMap((laneStrips, lane) =>
+          laneStrips.map((s) => ({ ...s, lane }))
+        )
+      );
+    }
+    return result;
+  }, [grid, events]);
+
   return (
     <div className="overflow-x-auto rounded-lg border border-border bg-card">
       <div className="min-w-[320px] sm:min-w-[375px] md:min-w-0">
@@ -81,81 +126,229 @@ export function MonthlyGrid({
           ))}
         </div>
 
-        <div className="grid grid-cols-7 grid-rows-[auto]">
-          {grid.map(({ date, isCurrentMonth }, i) => {
-            const key = toDateKey(date);
-            const dayEvents = eventsByDate.get(key) ?? [];
-            const holidays =
-              isCurrentMonth ? holidaysByDate.get(key) ?? [] : [];
+        <div className="block md:hidden">
+          <div className="flex flex-col">
+            {[0, 1, 2, 3, 4, 5].map((w) => {
+              const weekCells = grid.slice(w * 7, w * 7 + 7);
+              const weekStrips = multiDayStripsByWeek[w];
+              const numLanes =
+                weekStrips.length > 0
+                  ? Math.max(...weekStrips.map((s) => s.lane)) + 1
+                  : 0;
 
-            return (
-              <div
-                key={i}
-                className={cn(
-                  "min-h-[80px] border-b border-r border-border p-1 sm:min-h-[100px] sm:p-2 md:min-h-[110px] lg:min-h-[120px]",
-                  !isCurrentMonth && "bg-muted/30 text-muted-foreground",
-                  isCurrentMonth &&
-                    holidays.length > 0 &&
-                    "bg-amber-50 dark:bg-amber-950/20"
-                )}
-              >
-                {holidays.length > 0 ? (
-                  <Tooltip>
-                    <TooltipTrigger
-                      render={
-                        <span
-                          className={cn(
-                            "inline-flex size-7 cursor-default items-center justify-center gap-0.5 rounded-full text-sm sm:size-8",
-                            "font-medium text-foreground"
-                          )}
-                          aria-label={holidays.map((h) => h.name).join(", ")}
-                        >
-                          {date.getDate()}
-                          <PartyPopper
-                            className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400"
-                            aria-hidden
-                          />
-                        </span>
-                      }
-                    />
-                    <TooltipContent>
-                      <p>
-                        {holidays.map((h) => h.name).join(" · ")}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <span
-                    className={cn(
-                      "inline-flex size-7 items-center justify-center rounded-full text-sm sm:size-8",
-                      isCurrentMonth
-                        ? "font-medium text-foreground"
-                        : "text-muted-foreground"
-                    )}
-                  >
-                    {date.getDate()}
-                  </span>
-                )}
-
-                <div className="mt-1 flex flex-col gap-1">
-                  {loading ? (
-                    <div className="h-4 animate-pulse rounded bg-muted" />
-                  ) : (
-                    dayEvents.map(({ event: ev, showStartTag, showEndTag }) => (
-                      <EventBlock
-                        key={ev.id}
-                        event={ev}
+              return (
+                <div
+                  key={w}
+                  className="grid grid-cols-7 border-b border-border last:border-b-0"
+                  style={{
+                    gridTemplateRows:
+                      numLanes > 0
+                        ? `auto repeat(${numLanes}, minmax(24px, auto)) auto`
+                        : "auto auto",
+                  }}
+                >
+                  {weekCells.map(({ date, isCurrentMonth }, col) => {
+                    const key = toDateKey(date);
+                    const holidays =
+                      isCurrentMonth ? holidaysByDate.get(key) ?? [] : [];
+                    return (
+                      <div
+                        key={col}
+                        className={cn(
+                          "flex flex-col items-center justify-center border-r border-border p-1 last:border-r-0",
+                          !isCurrentMonth && "bg-muted/30 text-muted-foreground",
+                          isCurrentMonth &&
+                            holidays.length > 0 &&
+                            "bg-amber-50 dark:bg-amber-950/20"
+                        )}
+                        style={{ gridColumn: col + 1, gridRow: 1 }}
+                      >
+                        {holidays.length > 0 ? (
+                          <Tooltip>
+                            <TooltipTrigger
+                              render={
+                                <span
+                                  className={cn(
+                                    "inline-flex size-7 cursor-default items-center justify-center gap-0.5 rounded-full text-sm",
+                                    "font-medium text-foreground"
+                                  )}
+                                  aria-label={holidays
+                                    .map((h) => h.name)
+                                    .join(", ")}
+                                >
+                                  {date.getDate()}
+                                  <PartyPopper
+                                    className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400"
+                                    aria-hidden
+                                  />
+                                </span>
+                              }
+                            />
+                            <TooltipContent>
+                              <p>
+                                {holidays.map((h) => h.name).join(" · ")}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <span
+                            className={cn(
+                              "inline-flex size-7 items-center justify-center rounded-full text-sm",
+                              isCurrentMonth
+                                ? "font-medium text-foreground"
+                                : "text-muted-foreground"
+                            )}
+                          >
+                            {date.getDate()}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {weekStrips.map(({ event, startCol, span, lane }) => (
+                    <div
+                      key={event.id}
+                      className="col-span-1 flex items-center px-0.5"
+                      style={{
+                        gridColumn: `${startCol} / span ${span}`,
+                        gridRow: 2 + lane,
+                      }}
+                    >
+                      <EventStrip
+                        event={event}
                         onClick={onEventClick}
-                        dateKey={key}
-                        showStartTag={showStartTag}
-                        showEndTag={showEndTag}
+                        className="w-full"
                       />
-                    ))
-                  )}
+                    </div>
+                  ))}
+                  {weekCells.map(({ date, isCurrentMonth }, col) => {
+                    const key = toDateKey(date);
+                    const dayEvents = eventsByDate.get(key) ?? [];
+                    const singleDayEvents = dayEvents.filter(
+                      ({ event: ev }) => getEventDateKeys(ev).length === 1
+                    );
+                    const holidays =
+                      isCurrentMonth ? holidaysByDate.get(key) ?? [] : [];
+                    return (
+                      <div
+                        key={`cell-${col}`}
+                        className={cn(
+                          "min-h-[60px] border-r border-border p-1 last:border-r-0",
+                          !isCurrentMonth && "bg-muted/30 text-muted-foreground",
+                          isCurrentMonth &&
+                            holidays.length > 0 &&
+                            "bg-amber-50 dark:bg-amber-950/20"
+                        )}
+                        style={{
+                          gridColumn: col + 1,
+                          gridRow: 2 + numLanes,
+                        }}
+                      >
+                        <div className="mt-0.5 flex flex-col gap-1">
+                          {loading ? (
+                            <div className="h-4 animate-pulse rounded bg-muted" />
+                          ) : (
+                            singleDayEvents.map(
+                              ({ event: ev, showStartTag, showEndTag }) => (
+                                <EventBlock
+                                  key={ev.id}
+                                  event={ev}
+                                  onClick={onEventClick}
+                                  dateKey={key}
+                                  showStartTag={showStartTag}
+                                  showEndTag={showEndTag}
+                                  compact
+                                />
+                              )
+                            )
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="hidden md:block">
+          <div className="grid grid-cols-7 grid-rows-[auto]">
+            {grid.map(({ date, isCurrentMonth }, i) => {
+              const key = toDateKey(date);
+              const dayEvents = eventsByDate.get(key) ?? [];
+              const holidays =
+                isCurrentMonth ? holidaysByDate.get(key) ?? [] : [];
+
+              return (
+                <div
+                  key={i}
+                  className={cn(
+                    "min-h-[80px] border-b border-r border-border p-1 sm:min-h-[100px] sm:p-2 md:min-h-[110px] lg:min-h-[120px]",
+                    !isCurrentMonth && "bg-muted/30 text-muted-foreground",
+                    isCurrentMonth &&
+                      holidays.length > 0 &&
+                      "bg-amber-50 dark:bg-amber-950/20"
+                  )}
+                >
+                  {holidays.length > 0 ? (
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <span
+                            className={cn(
+                              "inline-flex size-7 cursor-default items-center justify-center gap-0.5 rounded-full text-sm sm:size-8",
+                              "font-medium text-foreground"
+                            )}
+                            aria-label={holidays.map((h) => h.name).join(", ")}
+                          >
+                            {date.getDate()}
+                            <PartyPopper
+                              className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400"
+                              aria-hidden
+                            />
+                          </span>
+                        }
+                      />
+                      <TooltipContent>
+                        <p>
+                          {holidays.map((h) => h.name).join(" · ")}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <span
+                      className={cn(
+                        "inline-flex size-7 items-center justify-center rounded-full text-sm sm:size-8",
+                        isCurrentMonth
+                          ? "font-medium text-foreground"
+                          : "text-muted-foreground"
+                      )}
+                    >
+                      {date.getDate()}
+                    </span>
+                  )}
+
+                  <div className="mt-1 flex flex-col gap-1">
+                    {loading ? (
+                      <div className="h-4 animate-pulse rounded bg-muted" />
+                    ) : (
+                      dayEvents.map(({ event: ev, showStartTag, showEndTag }) => (
+                        <EventBlock
+                          key={ev.id}
+                          event={ev}
+                          onClick={onEventClick}
+                          dateKey={key}
+                          showStartTag={showStartTag}
+                          showEndTag={showEndTag}
+                        />
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
