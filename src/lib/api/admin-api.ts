@@ -40,6 +40,7 @@ export async function createUser(
 export type AdminUser = {
   id: string;
   nome: string | null;
+  affidamentoColore: string | null;
   creatoIl: string;
 };
 
@@ -54,5 +55,21 @@ export async function updateUserPassword(
   return apiFetch<{ message?: string }>(`/api/admin/users/${userId}`, {
     method: "PATCH",
     body: JSON.stringify({ password }),
+  });
+}
+
+export async function updateUserAffidamentoColore(
+  userId: string,
+  affidamentoColore: string | null
+): Promise<{ message?: string }> {
+  return apiFetch<{ message?: string }>(`/api/admin/users/${userId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ affidamentoColore }),
+  });
+}
+
+export async function deleteUser(userId: string): Promise<{ message?: string }> {
+  return apiFetch<{ message?: string }>(`/api/admin/users/${userId}`, {
+    method: "DELETE",
   });
 }

@@ -35,6 +35,8 @@ export {
   createUser,
   getAdminUsers,
   updateUserPassword,
+  updateUserAffidamentoColore,
+  deleteUser,
   type AdminUser,
 } from "./admin-api";
 

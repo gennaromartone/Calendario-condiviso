@@ -69,11 +69,24 @@ export function MonthlyGrid({
   }, [events]);
 
   const multiDayStripsByWeek = useMemo(() => {
-    const result: { event: EventRecord; startCol: number; span: number; lane: number }[][] = [];
+    const result: {
+      event: EventRecord;
+      startCol: number;
+      span: number;
+      lane: number;
+      isFirstDay: boolean;
+      isLastDay: boolean;
+    }[][] = [];
     for (let w = 0; w < 6; w++) {
       const weekCells = grid.slice(w * 7, w * 7 + 7);
       const weekKeys = weekCells.map((c) => toDateKey(c.date));
-      const strips: { event: EventRecord; startCol: number; span: number }[] = [];
+      const strips: {
+        event: EventRecord;
+        startCol: number;
+        span: number;
+        isFirstDay: boolean;
+        isLastDay: boolean;
+      }[] = [];
       const multiDayEvents = events.filter(
         (e) => getEventDateKeys(e).length > 1
       );
@@ -83,11 +96,21 @@ export function MonthlyGrid({
         if (intersection.length > 0) {
           const startCol = weekKeys.indexOf(intersection[0]) + 1;
           const span = intersection.length;
-          strips.push({ event, startCol, span });
+          const isFirstDay = intersection[0] === eventKeys[0];
+          const isLastDay =
+            intersection[intersection.length - 1] ===
+            eventKeys[eventKeys.length - 1];
+          strips.push({ event, startCol, span, isFirstDay, isLastDay });
         }
       }
       strips.sort((a, b) => a.startCol - b.startCol);
-      const lanes: { event: EventRecord; startCol: number; span: number }[][] = [];
+      const lanes: {
+        event: EventRecord;
+        startCol: number;
+        span: number;
+        isFirstDay: boolean;
+        isLastDay: boolean;
+      }[][] = [];
       for (const strip of strips) {
         const endCol = strip.startCol + strip.span - 1;
         let lane = 0;
@@ -205,22 +228,26 @@ export function MonthlyGrid({
                       </div>
                     );
                   })}
-                  {weekStrips.map(({ event, startCol, span, lane }) => (
-                    <div
-                      key={event.id}
-                      className="col-span-1 flex items-center px-0.5"
-                      style={{
-                        gridColumn: `${startCol} / span ${span}`,
-                        gridRow: 2 + lane,
-                      }}
-                    >
-                      <EventStrip
-                        event={event}
-                        onClick={onEventClick}
-                        className="w-full"
-                      />
-                    </div>
-                  ))}
+                  {weekStrips.map(
+                    ({ event, startCol, span, lane, isFirstDay, isLastDay }) => (
+                      <div
+                        key={event.id}
+                        className="col-span-1 flex items-center px-0.5"
+                        style={{
+                          gridColumn: `${startCol} / span ${span}`,
+                          gridRow: 2 + lane,
+                        }}
+                      >
+                        <EventStrip
+                          event={event}
+                          onClick={onEventClick}
+                          className="w-full"
+                          isFirstDay={isFirstDay}
+                          isLastDay={isLastDay}
+                        />
+                      </div>
+                    )
+                  )}
                   {weekCells.map(({ date, isCurrentMonth }, col) => {
                     const key = toDateKey(date);
                     const dayEvents = eventsByDate.get(key) ?? [];

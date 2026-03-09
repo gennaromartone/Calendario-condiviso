@@ -67,8 +67,14 @@ export async function getSession(): Promise<{
 
 export type ColorOption = { hex: string; name: string };
 
-export async function getColorsAvailable(): Promise<ColorOption[]> {
-  return apiFetch<ColorOption[]>("/api/users/colors-available");
+export async function getColorsAvailable(
+  excludeUserId?: string
+): Promise<ColorOption[]> {
+  const url =
+    excludeUserId != null
+      ? `/api/users/colors-available?excludeUserId=${encodeURIComponent(excludeUserId)}`
+      : "/api/users/colors-available";
+  return apiFetch<ColorOption[]>(url);
 }
 
 export async function completeProfile(data: {

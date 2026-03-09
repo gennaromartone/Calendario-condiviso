@@ -77,7 +77,13 @@ export function WeeklyGrid({
 
   const multiDayStrips = useMemo(() => {
     const weekKeys = weekDates.map((d) => toDateKey(d));
-    const strips: { event: EventRecord; startCol: number; span: number }[] = [];
+    const strips: {
+      event: EventRecord;
+      startCol: number;
+      span: number;
+      isFirstDay: boolean;
+      isLastDay: boolean;
+    }[] = [];
     const multiDayEvents = events.filter(
       (e) => getEventDateKeys(e).length > 1
     );
@@ -87,11 +93,21 @@ export function WeeklyGrid({
       if (intersection.length > 0) {
         const startCol = weekKeys.indexOf(intersection[0]) + 1;
         const span = intersection.length;
-        strips.push({ event, startCol, span });
+        const isFirstDay = intersection[0] === eventKeys[0];
+        const isLastDay =
+          intersection[intersection.length - 1] ===
+          eventKeys[eventKeys.length - 1];
+        strips.push({ event, startCol, span, isFirstDay, isLastDay });
       }
     }
     strips.sort((a, b) => a.startCol - b.startCol);
-    const lanes: { event: EventRecord; startCol: number; span: number }[][] = [];
+    const lanes: {
+      event: EventRecord;
+      startCol: number;
+      span: number;
+      isFirstDay: boolean;
+      isLastDay: boolean;
+    }[][] = [];
     for (const strip of strips) {
       const endCol = strip.startCol + strip.span - 1;
       let lane = 0;
@@ -186,22 +202,26 @@ export function WeeklyGrid({
                 </div>
               );
             })}
-            {multiDayStrips.map(({ event, startCol, span, lane }) => (
-              <div
-                key={event.id}
-                className="col-span-1 flex items-center px-0.5"
-                style={{
-                  gridColumn: `${startCol} / span ${span}`,
-                  gridRow: 2 + lane,
-                }}
-              >
-                <EventStrip
-                  event={event}
-                  onClick={onEventClick}
-                  className="w-full"
-                />
-              </div>
-            ))}
+            {multiDayStrips.map(
+              ({ event, startCol, span, lane, isFirstDay, isLastDay }) => (
+                <div
+                  key={event.id}
+                  className="col-span-1 flex items-center px-0.5"
+                  style={{
+                    gridColumn: `${startCol} / span ${span}`,
+                    gridRow: 2 + lane,
+                  }}
+                >
+                  <EventStrip
+                    event={event}
+                    onClick={onEventClick}
+                    className="w-full"
+                    isFirstDay={isFirstDay}
+                    isLastDay={isLastDay}
+                  />
+                </div>
+              )
+            )}
             {weekDates.map((date, i) => {
               const key = toDateKey(date);
               const dayEvents = eventsByDate.get(key) ?? [];

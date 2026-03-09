@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Home, School, Dumbbell, MoreHorizontal } from "lucide-react";
+import { Home, School, Dumbbell, CircleDot } from "lucide-react";
 
 export type EventTipo = "affidamento" | "scuola" | "sport" | "altro";
 
@@ -37,8 +37,8 @@ export const EVENT_TIPO_CONFIG: Record<
   altro: {
     color: "text-muted-foreground",
     borderColor: "border-l-muted-foreground/50",
-    bgColor: "bg-muted/50 hover:bg-muted",
-    icon: MoreHorizontal,
+    bgColor: "bg-muted-foreground/20 hover:bg-muted-foreground/30",
+    icon: CircleDot,
     label: "Altro",
   },
 };

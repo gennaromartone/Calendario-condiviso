@@ -8,6 +8,7 @@ import { userRepository } from "@/lib/repositories";
 export type AdminUser = {
   id: string;
   nome: string | null;
+  affidamentoColore: string | null;
   creatoIl: string;
 };
 
@@ -24,6 +25,7 @@ export async function GET() {
   const users: AdminUser[] = allUsers.map((r) => ({
     id: r.id,
     nome: r.nome,
+    affidamentoColore: r.affidamentoColore ?? null,
     creatoIl: r.creatoIl ?? "",
   }));
 

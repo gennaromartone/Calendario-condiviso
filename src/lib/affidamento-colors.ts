@@ -1,6 +1,6 @@
 /**
  * Predefined palette for Affidamento colors.
- * 8–12 distinct accessible colors (contrast sufficient on light/dark backgrounds).
+ * Distinct accessible colors with good mutual contrast (light/dark backgrounds).
  */
 export const AFFIDAMENTO_PALETTE = [
   { hex: "#2563EB", name: "blu" },
@@ -13,4 +13,17 @@ export const AFFIDAMENTO_PALETTE = [
   { hex: "#D97706", name: "ambra" },
   { hex: "#059669", name: "smeraldo" },
   { hex: "#DC2626", name: "rosso" },
+  // +10 colori ad alto contrasto reciproco
+  { hex: "#0891B2", name: "ciano" },
+  { hex: "#C026D3", name: "fucsia" },
+  { hex: "#65A30D", name: "lime" },
+  { hex: "#CA8A04", name: "giallo" },
+  { hex: "#92400E", name: "marrone" },
+  { hex: "#991B1B", name: "bordeaux" },
+  { hex: "#BE185D", name: "magenta" },
+  { hex: "#0F766E", name: "petrolio" },
+  { hex: "#6D28D9", name: "lavanda" },
+  { hex: "#854D0E", name: "senape" },
+  { hex: "#1E40AF", name: "blu scuro" },
+  { hex: "#047857", name: "verde scuro" },
 ] as const;

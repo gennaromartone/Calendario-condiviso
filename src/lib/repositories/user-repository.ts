@@ -12,4 +12,6 @@ export interface IUserRepository {
   countExcludingLegacy(): Promise<number>;
   create(data: { passwordHash: string; loginIdentifier?: string | null }): Promise<{ id: string }>;
   updatePassword(id: string, passwordHash: string): Promise<void>;
+  updateAffidamentoColore(id: string, affidamentoColore: string | null): Promise<void>;
+  deleteUser(id: string): Promise<void>;
 }

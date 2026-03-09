@@ -1,6 +1,6 @@
-import { and, count, eq, ne } from "drizzle-orm";
+import { and, count, eq, ne, or } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { utenti } from "@/db/schema";
+import { eventi, infoImportanti, notifiche, utenti } from "@/db/schema";
 import type { IUserRepository } from "./user-repository";
 import type { UserWithPasswordHash, UserWithProfile } from "./types";
 
@@ -103,5 +103,26 @@ export class DrizzleUserRepository implements IUserRepository {
       .update(utenti)
       .set({ passwordHash, modificatoIl: new Date().toISOString() })
       .where(eq(utenti.id, id));
+  }
+
+  async updateAffidamentoColore(
+    id: string,
+    affidamentoColore: string | null
+  ): Promise<void> {
+    await db
+      .update(utenti)
+      .set({ affidamentoColore, modificatoIl: new Date().toISOString() })
+      .where(eq(utenti.id, id));
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(notifiche)
+        .where(or(eq(notifiche.utenteId, id), eq(notifiche.autoreId, id)));
+      await tx.delete(eventi).where(eq(eventi.creatoDa, id));
+      await tx.delete(infoImportanti).where(eq(infoImportanti.creatoDa, id));
+      await tx.delete(utenti).where(eq(utenti.id, id));
+    });
   }
 }

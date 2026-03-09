@@ -61,7 +61,7 @@ export function EventFormSheet({
 
   const { data: availableColors = [] } = useQuery({
     queryKey: ["colors-available"],
-    queryFn: getColorsAvailable,
+    queryFn: () => getColorsAvailable(),
     enabled: open && mode === "create" && !!needsAffidamentoColor,
   });
 

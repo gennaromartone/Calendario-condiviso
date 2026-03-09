@@ -16,7 +16,20 @@ import {
   createUser,
   getAdminUsers,
   updateUserPassword,
+  updateUserAffidamentoColore,
+  deleteUser,
+  getColorsAvailable,
 } from "@/lib/api";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { BackupControls } from "@/components/backup-controls";
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
@@ -26,6 +39,8 @@ type Status = "loading" | "denied" | "ready" | "success" | "error";
 
 function AdminUserList() {
   const queryClient = useQueryClient();
+  const { userId, userName } = useAuth();
+  const isSuperAdmin = userName?.trim() === "Gennaro";
   const { data: users = [], isPending } = useQuery({
     queryKey: ["admin", "users"],
     queryFn: getAdminUsers,
@@ -53,7 +68,8 @@ function AdminUserList() {
       <CardHeader>
         <h2 className="text-lg font-medium">Utenti esistenti</h2>
         <p className="text-sm text-muted-foreground">
-          Lista genitori. Puoi modificare la parola d&apos;ordine per ciascuno.
+          Lista genitori. Puoi modificare la parola d&apos;ordine e il colore
+          Affidamento per ciascuno.
         </p>
       </CardHeader>
       <CardContent>
@@ -62,9 +78,13 @@ function AdminUserList() {
             <AdminUserRow
               key={user.id}
               user={user}
-              onUpdated={() =>
-                queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
-              }
+              currentUserId={userId}
+              isSuperAdmin={isSuperAdmin}
+              onUpdated={() => {
+                queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+                queryClient.invalidateQueries({ queryKey: ["admin", "status"] });
+                queryClient.invalidateQueries({ queryKey: ["colors-available"] });
+              }}
             />
           ))}
         </ul>
@@ -75,16 +95,27 @@ function AdminUserList() {
 
 function AdminUserRow({
   user,
+  currentUserId,
+  isSuperAdmin,
   onUpdated,
 }: {
   user: AdminUser;
+  currentUserId?: string;
+  isSuperAdmin: boolean;
   onUpdated: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [colorError, setColorError] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const updateMutation = useMutation({
+  const { data: availableColors = [] } = useQuery({
+    queryKey: ["colors-available", "admin", user.id],
+    queryFn: () => getColorsAvailable(user.id),
+  });
+
+  const updatePasswordMutation = useMutation({
     mutationFn: (pwd: string) => updateUserPassword(user.id, pwd),
     onSuccess: () => {
       setPassword("");
@@ -97,18 +128,39 @@ function AdminUserRow({
     },
   });
 
+  const updateColorMutation = useMutation({
+    mutationFn: (hex: string | null) =>
+      updateUserAffidamentoColore(user.id, hex),
+    onSuccess: () => {
+      setColorError(null);
+      onUpdated();
+    },
+    onError: (e) => {
+      setColorError(e instanceof Error ? e.message : "Errore durante l'aggiornamento del colore");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteUser(user.id),
+    onSuccess: () => {
+      setDeleteOpen(false);
+      onUpdated();
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!password.trim()) {
+    const trimmed = password.trim();
+    if (!trimmed) {
       setError("Inserisci la parola d'ordine");
       return;
     }
-    if (password.length < 6) {
+    if (trimmed.length < 6) {
       setError("La parola d'ordine deve avere almeno 6 caratteri");
       return;
     }
-    updateMutation.mutate(password.trim());
+    updatePasswordMutation.mutate(trimmed);
   };
 
   const formattedDate = (() => {
@@ -119,31 +171,112 @@ function AdminUserRow({
     }
   })();
 
+  const canDelete =
+    isSuperAdmin &&
+    currentUserId != null &&
+    user.id !== currentUserId;
+
   return (
     <li className="flex flex-col gap-2 rounded-lg border border-border p-3">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="font-medium">
-            {user.nome || "Senza nome"}
-          </p>
+          <p className="font-medium">{user.nome || "Senza nome"}</p>
           <p className="text-sm text-muted-foreground">
             Creato il {formattedDate}
           </p>
+          {user.affidamentoColore && (
+            <div className="mt-1 flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                Colore Affidamento:
+              </span>
+              <span
+                className="inline-block h-4 w-4 rounded border border-border"
+                style={{ backgroundColor: user.affidamentoColore }}
+                aria-hidden
+              />
+            </div>
+          )}
         </div>
-        {!editing ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="min-h-[44px] min-w-[44px] shrink-0"
-            onClick={() => setEditing(true)}
-          >
-            Modifica password
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap gap-2">
+          {!editing ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="min-h-[44px] min-w-[44px] shrink-0"
+              onClick={() => setEditing(true)}
+            >
+              Modifica password
+            </Button>
+          ) : null}
+          {canDelete && (
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              className="min-h-[44px] min-w-[44px] shrink-0"
+              onClick={() => setDeleteOpen(true)}
+            >
+              Elimina utente
+            </Button>
+          )}
+        </div>
       </div>
+
+      {availableColors.length > 0 && (
+        <div className="flex flex-col gap-1.5 pt-2 border-t border-border">
+          <span className="text-xs font-medium text-muted-foreground">
+            Colore Affidamento
+          </span>
+          {colorError && (
+            <p
+              role="alert"
+              className="text-sm text-destructive"
+              aria-live="polite"
+            >
+              {colorError}
+            </p>
+          )}
+          <div
+            role="group"
+            aria-label="Colori disponibili"
+            className="flex flex-wrap gap-2"
+          >
+            {availableColors.map((c) => (
+              <button
+                key={c.hex}
+                type="button"
+                onClick={() => updateColorMutation.mutate(c.hex)}
+                disabled={updateColorMutation.isPending}
+                className={cn(
+                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 transition-all focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                  user.affidamentoColore === c.hex
+                    ? "border-primary ring-2 ring-primary/30"
+                    : "border-transparent hover:border-muted-foreground/30"
+                )}
+                style={{ backgroundColor: c.hex }}
+                aria-pressed={user.affidamentoColore === c.hex}
+                aria-label={`Imposta colore ${c.name}`}
+              />
+            ))}
+          </div>
+          {user.affidamentoColore && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 w-fit text-xs"
+              onClick={() => updateColorMutation.mutate(null)}
+              disabled={updateColorMutation.isPending}
+            >
+              Rimuovi colore
+            </Button>
+          )}
+        </div>
+      )}
+
       {editing && (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-2 pt-2">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-2 pt-2 border-t border-border">
           <div className="flex flex-col gap-1">
             <Label htmlFor={`password-${user.id}`}>
               Nuova parola d&apos;ordine
@@ -175,10 +308,10 @@ function AdminUserRow({
             <Button
               type="submit"
               size="sm"
-              disabled={updateMutation.isPending}
+              disabled={updatePasswordMutation.isPending}
               className="min-h-[44px] min-w-[44px]"
             >
-              {updateMutation.isPending ? "Salvataggio…" : "Salva"}
+              {updatePasswordMutation.isPending ? "Salvataggio…" : "Salva"}
             </Button>
             <Button
               type="button"
@@ -190,12 +323,45 @@ function AdminUserRow({
                 setPassword("");
                 setError(null);
               }}
-              disabled={updateMutation.isPending}
+              disabled={updatePasswordMutation.isPending}
             >
               Annulla
             </Button>
           </div>
         </form>
+      )}
+
+      {canDelete && (
+        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Elimina utente</AlertDialogTitle>
+              <AlertDialogDescription>
+                Stai per eliminare {user.nome || "questo utente"}. Questo
+                eliminerà anche tutti i suoi eventi e le info importanti create.
+                L&apos;operazione non può essere annullata.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                className={cn(
+                  buttonVariants({ variant: "outline" }),
+                  "min-h-[44px] min-w-[44px]"
+                )}
+              >
+                Annulla
+              </AlertDialogCancel>
+              <Button
+                variant="destructive"
+                onClick={() => deleteMutation.mutate()}
+                disabled={deleteMutation.isPending}
+                className="min-h-[44px] min-w-[44px]"
+              >
+                {deleteMutation.isPending ? "Eliminazione…" : "Elimina"}
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </li>
   );
@@ -246,16 +412,17 @@ function AdminContent() {
     e.preventDefault();
     setError(null);
 
-    if (!password.trim()) {
+    const trimmed = password.trim();
+    if (!trimmed) {
       setError("Inserisci la parola d'ordine");
       return;
     }
-    if (password.length < 6) {
+    if (trimmed.length < 6) {
       setError("La parola d'ordine deve avere almeno 6 caratteri");
       return;
     }
 
-    createUserMutation.mutate(password.trim());
+    createUserMutation.mutate(trimmed);
   };
 
   if (resolvedStatus === "loading") {

@@ -47,28 +47,73 @@ export function EventBlock({
   const useCreatorColor = isAffidamento && creatorColor;
   const ariaLabel = `${event.titolo}, ${tipoConfig.label}`;
 
+  const isMultiDay = showStartTag != null || showEndTag != null;
+  const isFirstDay = isMultiDay && showStartTag;
+  const isLastDay = isMultiDay && showEndTag;
+
+  const borderClasses = (() => {
+    if (!isMultiDay) return "border-l-4";
+    if (isFirstDay) return "border-l-4";
+    if (isLastDay) return "border-r-4";
+    return "";
+  })();
+
+  const borderColorClass =
+    !useCreatorColor && (isFirstDay || !isMultiDay) ? tipoConfig.borderColor : "";
+  const borderRightColorClass =
+    !useCreatorColor && isLastDay
+      ? tipoConfig.borderColor.replace("border-l-", "border-r-")
+      : "";
+
+  const borderStyle = useCreatorColor
+    ? {
+        ...(isFirstDay && { borderLeftColor: creatorColor }),
+        ...(isLastDay && { borderRightColor: creatorColor }),
+        backgroundColor: hexToRgba(creatorColor!, 0.1),
+      }
+    : undefined;
+
   return (
     <button
       type="button"
       onClick={() => onClick?.(event)}
       aria-label={ariaLabel}
       className={cn(
-        "group flex min-h-[44px] min-w-[44px] flex-col justify-center gap-0.5 rounded border-l-4 px-1.5 py-0.5 text-left text-xs transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 motion-reduce:transition-none",
-        !useCreatorColor && tipoConfig.borderColor,
+        "group flex min-h-[44px] min-w-[44px] flex-col justify-center gap-0.5 rounded px-1.5 py-0.5 text-left text-xs transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 motion-reduce:transition-none",
+        borderClasses,
+        borderColorClass,
+        borderRightColorClass,
         !useCreatorColor && tipoConfig.bgColor,
         className
       )}
-      style={
-        useCreatorColor
-          ? {
-              borderLeftColor: creatorColor,
-              backgroundColor: hexToRgba(creatorColor, 0.1),
-            }
-          : undefined
-      }
+      style={borderStyle}
     >
       <span className="truncate font-medium">{event.titolo}</span>
-      {!compact && (
+      {compact ? (
+        (event.tipo === "scuola" ||
+          event.tipo === "sport" ||
+          event.tipo === "altro") && (
+          <div className="flex items-center gap-1">
+            <Badge
+              variant="secondary"
+              className={cn(
+                "h-5 w-5 shrink-0 p-0 justify-center",
+                !useCreatorColor && tipoConfig.color
+              )}
+              style={
+                useCreatorColor && creatorColor
+                  ? {
+                      backgroundColor: hexToRgba(creatorColor, 0.2),
+                      color: creatorColor,
+                    }
+                  : undefined
+              }
+            >
+              <Icon className="size-3" aria-hidden />
+            </Badge>
+          </div>
+        )
+      ) : (
         <div className="flex flex-wrap items-center gap-1">
           <Badge
             variant="secondary"
