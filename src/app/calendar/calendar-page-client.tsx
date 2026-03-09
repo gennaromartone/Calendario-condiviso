@@ -63,7 +63,7 @@ export function CalendarPageClient({
   return (
     <HolidayCountriesProvider>
       <header className="mb-6 flex items-center justify-between gap-4 sm:mb-8">
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">
+        <h1 className="text-2xl font-bold tracking-tight sm:text-2xl md:text-3xl">
           Calendario
         </h1>
         <CalendarHeaderActions />

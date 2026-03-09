@@ -249,7 +249,7 @@ export function CalendarView({
               aria-pressed={viewMode === "month"}
               aria-label="Vista mensile"
               className={cn(
-                "min-h-[44px] min-w-[44px] rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                "min-w-[44px] rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
                 viewMode === "month"
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -263,13 +263,13 @@ export function CalendarView({
               aria-pressed={viewMode === "week"}
               aria-label="Vista settimanale"
               className={cn(
-                "min-h-[44px] min-w-[44px] rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                "min-w-[44px] rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
                 viewMode === "week"
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               )}
             >
-              Settimana
+              Weekly
             </button>
           </div>
 
