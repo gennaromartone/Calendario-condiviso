@@ -41,3 +41,12 @@ export {
   updateUserPassword,
   type AdminUser,
 } from "./api/admin-api";
+
+export {
+  getInfoImportanti,
+  createInfoImportante,
+  updateInfoImportante,
+  deleteInfoImportante,
+  togglePinInfoImportante,
+  type InfoImportanteRecord,
+} from "./api/info-importanti-api";

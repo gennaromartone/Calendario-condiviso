@@ -9,7 +9,8 @@ export type RateLimitPrefix =
   | "login"
   | "backup"
   | "admin-users"
-  | "events";
+  | "events"
+  | "info-importanti";
 
 const LIMITS: Record<
   RateLimitPrefix,
@@ -19,6 +20,7 @@ const LIMITS: Record<
   backup: { windowMs: 15 * 60 * 1000, maxAttempts: 10 },
   "admin-users": { windowMs: 15 * 60 * 1000, maxAttempts: 5 },
   events: { windowMs: 2 * 60 * 1000, maxAttempts: 30 },
+  "info-importanti": { windowMs: 2 * 60 * 1000, maxAttempts: 30 },
 };
 
 interface Entry {

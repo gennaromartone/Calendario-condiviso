@@ -51,3 +51,35 @@ export type UpdateEventData = Partial<
 > & {
   note?: EventNotes | null;
 };
+
+/** Info importante valore JSON shape (telefono, indirizzo, contenuto) */
+export type InfoImportanteValore = {
+  telefono?: string;
+  indirizzo?: string;
+  contenuto?: string;
+};
+
+export type InfoImportante = {
+  id: string;
+  titolo: string;
+  tipo: "scuola" | "medico" | "altro";
+  valore: InfoImportanteValore | null;
+  pinned: boolean;
+  pinnedAt: string | null;
+  creatoDa: string;
+  creatoIl: string;
+  modificatoIl: string;
+};
+
+export type CreateInfoImportanteData = {
+  titolo: string;
+  tipo: "scuola" | "medico" | "altro";
+  valore: InfoImportanteValore | null;
+  creatoDa: string;
+};
+
+export type UpdateInfoImportanteData = {
+  titolo: string;
+  tipo: "scuola" | "medico" | "altro";
+  valore: InfoImportanteValore | null;
+};

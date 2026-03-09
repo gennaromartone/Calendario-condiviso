@@ -1,4 +1,4 @@
-import { sqliteTable, text, unique } from "drizzle-orm/sqlite-core";
+import { integer, sqliteTable, text, unique } from "drizzle-orm/sqlite-core";
 
 /**
  * Users table - each parent has their own password.
@@ -48,6 +48,33 @@ export const eventi = sqliteTable("eventi", {
     .references(() => utenti.id),
   note: text("note"),
   luogo: text("luogo"),
+  creatoIl: text("creato_il")
+    .$defaultFn(() => new Date().toISOString())
+    .notNull(),
+  modificatoIl: text("modificato_il")
+    .$defaultFn(() => new Date().toISOString())
+    .notNull(),
+});
+
+/** Info type: scuola | medico | altro */
+const infoImportantiTipoValues = ["scuola", "medico", "altro"] as const;
+
+/**
+ * Info importanti table - shared important info (school, doctor, etc.).
+ * creatoDa references utenti.id. valore stores JSON (telefono, indirizzo, contenuto).
+ */
+export const infoImportanti = sqliteTable("info_importanti", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  titolo: text("titolo").notNull(),
+  tipo: text("tipo", { enum: infoImportantiTipoValues }).notNull(),
+  valore: text("valore"), // JSON
+  pinned: integer("pinned", { mode: "boolean" }).$defaultFn(() => false).notNull(),
+  pinnedAt: text("pinned_at"),
+  creatoDa: text("creato_da")
+    .notNull()
+    .references(() => utenti.id),
   creatoIl: text("creato_il")
     .$defaultFn(() => new Date().toISOString())
     .notNull(),

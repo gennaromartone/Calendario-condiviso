@@ -36,6 +36,13 @@
       "when": 1773057008830,
       "tag": "0004_famous_blur",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1773065062100,
+      "tag": "0005_chubby_zodiak",
+      "breakpoints": true
     }
   ]
 }
