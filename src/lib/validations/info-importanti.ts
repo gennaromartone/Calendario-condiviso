@@ -161,9 +161,15 @@ export function infoImportanteFormToApiPayload(
   const contenuto = (values.contenuto ?? "").trim();
   let valore: { telefono?: string; indirizzo?: string; contenuto?: string } = {};
   if (t === "scuola") {
-    valore = { telefono, ...(indirizzo && { indirizzo }) };
+    valore = {
+      ...(telefono && { telefono }),
+      ...(indirizzo && { indirizzo }),
+    };
   } else if (t === "medico") {
-    valore = { telefono, indirizzo };
+    valore = {
+      ...(telefono && { telefono }),
+      ...(indirizzo && { indirizzo }),
+    };
   } else if (t === "altro") {
     valore = {
       contenuto,

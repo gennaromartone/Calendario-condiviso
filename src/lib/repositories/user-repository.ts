@@ -5,6 +5,7 @@ import type { UserWithPasswordHash, UserWithProfile } from "./types";
  * Enables swapping implementations (e.g. for testing).
  */
 export interface IUserRepository {
+  findAllIds(): Promise<string[]>;
   findAllWithPasswordHash(): Promise<UserWithPasswordHash[]>;
   findByLoginIdentifier(identifier: string): Promise<UserWithPasswordHash | null>;
   findById(id: string): Promise<UserWithProfile | null>;

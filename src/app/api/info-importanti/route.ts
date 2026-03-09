@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/session";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { getClientIp, shouldBypassRateLimit } from "@/lib/request-utils";
-import { getInfoImportantiUseCase, createInfoImportanteUseCase } from "@/lib/use-cases";
+import {
+  getInfoImportantiUseCase,
+  createInfoImportanteUseCase,
+  createNotificationsForOtherUsersUseCase,
+} from "@/lib/use-cases";
 import { createInfoImportanteSchema } from "@/lib/validations/info-importanti";
 
 export async function GET(request: NextRequest) {
@@ -59,5 +63,14 @@ export async function POST(request: NextRequest) {
     valore: Object.keys(parsed.data.valore).length > 0 ? parsed.data.valore : null,
     creatoDa: sessionResult.userId!,
   });
+
+  await createNotificationsForOtherUsersUseCase.execute({
+    autoreId: sessionResult.userId!,
+    tipo: "info_aggiunta",
+    entityType: "info_importante",
+    entityId: created.id,
+    titolo: created.titolo,
+  });
+
   return NextResponse.json(created, { status: 201 });
 }

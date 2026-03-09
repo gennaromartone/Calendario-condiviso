@@ -5,11 +5,13 @@ import { getClientIp, shouldBypassRateLimit } from "@/lib/request-utils";
 import {
   updateInfoImportanteUseCase,
   deleteInfoImportanteUseCase,
+  createNotificationsForOtherUsersUseCase,
 } from "@/lib/use-cases";
 import {
   createInfoImportanteSchema,
   infoImportanteIdParamSchema,
 } from "@/lib/validations/info-importanti";
+import { infoImportantiRepository } from "@/lib/repositories";
 
 const NOT_FOUND_MESSAGE = "Info non trovata";
 
@@ -57,6 +59,17 @@ export async function PATCH(
     );
   }
 
+  const existing = await infoImportantiRepository.findById(idResult.data);
+  if (!existing) {
+    return NextResponse.json({ error: NOT_FOUND_MESSAGE }, { status: 404 });
+  }
+  if (existing.creatoDa !== sessionResult.userId) {
+    return NextResponse.json(
+      { error: "Non puoi modificare info create da altri" },
+      { status: 403 }
+    );
+  }
+
   const updated = await updateInfoImportanteUseCase.execute(idResult.data, {
     titolo: parsed.data.titolo,
     tipo: parsed.data.tipo,
@@ -66,6 +79,15 @@ export async function PATCH(
   if (!updated) {
     return NextResponse.json({ error: NOT_FOUND_MESSAGE }, { status: 404 });
   }
+
+  await createNotificationsForOtherUsersUseCase.execute({
+    autoreId: sessionResult.userId!,
+    tipo: "info_modificata",
+    entityType: "info_importante",
+    entityId: idResult.data,
+    titolo: updated.titolo,
+  });
+
   return NextResponse.json(updated);
 }
 
@@ -87,9 +109,29 @@ export async function DELETE(
     return NextResponse.json({ error: NOT_FOUND_MESSAGE }, { status: 404 });
   }
 
+  const existing = await infoImportantiRepository.findById(idResult.data);
+  if (!existing) {
+    return NextResponse.json({ error: NOT_FOUND_MESSAGE }, { status: 404 });
+  }
+  if (existing.creatoDa !== sessionResult.userId) {
+    return NextResponse.json(
+      { error: "Non puoi eliminare info create da altri" },
+      { status: 403 }
+    );
+  }
+
   const deleted = await deleteInfoImportanteUseCase.execute(idResult.data);
   if (!deleted) {
     return NextResponse.json({ error: NOT_FOUND_MESSAGE }, { status: 404 });
   }
+
+  await createNotificationsForOtherUsersUseCase.execute({
+    autoreId: sessionResult.userId!,
+    tipo: "info_eliminata",
+    entityType: "info_importante",
+    entityId: null,
+    titolo: existing.titolo,
+  });
+
   return NextResponse.json({ success: true });
 }

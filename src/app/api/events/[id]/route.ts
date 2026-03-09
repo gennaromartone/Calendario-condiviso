@@ -4,6 +4,7 @@ import { updateEventSchema } from "@/lib/validations/events";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { getClientIp, shouldBypassRateLimit } from "@/lib/request-utils";
 import { eventRepository } from "@/lib/repositories";
+import { createNotificationsForOtherUsersUseCase } from "@/lib/use-cases";
 
 export async function PATCH(
   request: NextRequest,
@@ -43,6 +44,15 @@ export async function PATCH(
   if (!result) {
     return NextResponse.json({ error: "Evento non trovato" }, { status: 404 });
   }
+
+  await createNotificationsForOtherUsersUseCase.execute({
+    autoreId: sessionResult.userId!,
+    tipo: "evento_modificato",
+    entityType: "evento",
+    entityId: id,
+    titolo: result.titolo,
+  });
+
   return NextResponse.json(result);
 }
 
@@ -70,6 +80,14 @@ export async function DELETE(
       { status: 403 }
     );
   }
+
+  await createNotificationsForOtherUsersUseCase.execute({
+    autoreId: sessionResult.userId!,
+    tipo: "evento_eliminato",
+    entityType: "evento",
+    entityId: null,
+    titolo: existing.titolo,
+  });
 
   await eventRepository.delete(id);
 

@@ -3,7 +3,11 @@ import { requireSession } from "@/lib/session";
 import { createEventSchema } from "@/lib/validations/events";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { getClientIp, shouldBypassRateLimit } from "@/lib/request-utils";
-import { getEventsUseCase, createEventUseCase } from "@/lib/use-cases";
+import {
+  getEventsUseCase,
+  createEventUseCase,
+  createNotificationsForOtherUsersUseCase,
+} from "@/lib/use-cases";
 
 export async function GET(request: NextRequest) {
   const ip = getClientIp(request);
@@ -57,5 +61,14 @@ export async function POST(request: NextRequest) {
     luogo: parsed.data.luogo ?? null,
     creatoDa: sessionResult.userId!,
   });
+
+  await createNotificationsForOtherUsersUseCase.execute({
+    autoreId: sessionResult.userId!,
+    tipo: "evento_aggiunto",
+    entityType: "evento",
+    entityId: event.id,
+    titolo: event.titolo,
+  });
+
   return NextResponse.json(event);
 }

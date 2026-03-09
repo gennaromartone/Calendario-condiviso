@@ -50,3 +50,11 @@ export {
   togglePinInfoImportante,
   type InfoImportanteRecord,
 } from "./api/info-importanti-api";
+
+export {
+  getNotifiche,
+  getUnreadCount,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  type NotificaRecord,
+} from "./api/notifiche-api";

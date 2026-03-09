@@ -111,9 +111,9 @@ export class DrizzleEventRepository implements IEventRepository {
     return rows.map(mapRowToEvent);
   }
 
-  async findById(id: string): Promise<{ creatoDa: string } | null> {
+  async findById(id: string): Promise<{ creatoDa: string; titolo: string } | null> {
     const [row] = await db
-      .select({ creatoDa: eventi.creatoDa })
+      .select({ creatoDa: eventi.creatoDa, titolo: eventi.titolo })
       .from(eventi)
       .where(eq(eventi.id, id))
       .limit(1);

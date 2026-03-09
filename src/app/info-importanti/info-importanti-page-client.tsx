@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useUnreadCount } from "@/hooks/use-unread-count";
+import { NotificationBell } from "@/components/notification-bell";
+import { NotificationPanel } from "@/components/notification-panel";
 import { useQuery } from "@tanstack/react-query";
 import { getInfoImportanti } from "@/lib/api";
 import type { InfoImportanteRecord } from "@/lib/api";
@@ -124,6 +127,8 @@ function InfoImportanteCard({
 
 export function InfoImportantiPageClient() {
   const [formSheetOpen, setFormSheetOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const { data: unreadCount = 0 } = useUnreadCount({ refetchInterval: 60000 });
   const [editingInfo, setEditingInfo] = useState<InfoImportanteRecord | null>(
     null
   );
@@ -197,14 +202,29 @@ export function InfoImportantiPageClient() {
           <h1 className="text-2xl font-bold tracking-tight sm:text-2xl md:text-3xl">
             Info importanti
           </h1>
-          <Button
-          onClick={handleOpenAdd}
-          className="min-h-[44px] min-w-[44px] shrink-0"
-          aria-label="Aggiungi info"
-        >
-          <Plus className="size-5" aria-hidden />
-          Aggiungi info
-        </Button>
+          <div className="flex items-center gap-2">
+            <NotificationBell
+              onClick={() => setNotificationOpen(true)}
+              unreadCount={unreadCount}
+              aria-label={
+                unreadCount > 0
+                  ? `Notifiche, ${unreadCount} non lette`
+                  : "Notifiche"
+              }
+            />
+            <NotificationPanel
+              open={notificationOpen}
+              onOpenChange={setNotificationOpen}
+            />
+            <Button
+              onClick={handleOpenAdd}
+              className="min-h-[44px] min-w-[44px] shrink-0"
+              aria-label="Aggiungi info"
+            >
+              <Plus className="size-5" aria-hidden />
+              Aggiungi info
+            </Button>
+          </div>
         </div>
       </header>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -11,6 +12,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useBackupActions } from "@/hooks/use-backup-actions";
+import { useUnreadCount } from "@/hooks/use-unread-count";
+import { NotificationBell } from "@/components/notification-bell";
+import { NotificationPanel } from "@/components/notification-panel";
 import { useHolidayCountriesContext } from "@/contexts/holiday-countries-context";
 import { cn } from "@/lib/utils";
 import {
@@ -26,9 +30,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function CalendarHeaderActions() {
+  const [notificationOpen, setNotificationOpen] = useState(false);
   const { userName, logout } = useAuth();
   const { handleExport, handleImport, triggerImport, inputRef } =
     useBackupActions();
+  const { data: unreadCount = 0 } = useUnreadCount({ refetchInterval: 60000 });
   const [, setHolidayPreference, holidayPreference] =
     useHolidayCountriesContext();
 
@@ -46,6 +52,19 @@ export function CalendarHeaderActions() {
         onChange={handleImport}
         className="hidden"
         aria-hidden
+      />
+      <NotificationBell
+        onClick={() => setNotificationOpen(true)}
+        unreadCount={unreadCount}
+        aria-label={
+          unreadCount > 0
+            ? `Notifiche, ${unreadCount} non lette`
+            : "Notifiche"
+        }
+      />
+      <NotificationPanel
+        open={notificationOpen}
+        onOpenChange={setNotificationOpen}
       />
       <DropdownMenu>
         <DropdownMenuTrigger

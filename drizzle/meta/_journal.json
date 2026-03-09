@@ -43,6 +43,13 @@
       "when": 1773065062100,
       "tag": "0005_chubby_zodiak",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1773069938834,
+      "tag": "0006_flimsy_namorita",
+      "breakpoints": true
     }
   ]
 }

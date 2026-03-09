@@ -83,6 +83,42 @@ export const infoImportanti = sqliteTable("info_importanti", {
     .notNull(),
 });
 
+/** Notification type enum */
+const notificaTipoValues = [
+  "evento_aggiunto",
+  "evento_modificato",
+  "evento_eliminato",
+  "info_aggiunta",
+  "info_modificata",
+  "info_eliminata",
+] as const;
+
+/** Entity type for notifications */
+const notificaEntityTypeValues = ["evento", "info_importante"] as const;
+
+/**
+ * Notifications table - per-user notifications for events and info changes.
+ */
+export const notifiche = sqliteTable("notifiche", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  utenteId: text("utente_id")
+    .notNull()
+    .references(() => utenti.id),
+  tipo: text("tipo", { enum: notificaTipoValues }).notNull(),
+  entityType: text("entity_type", { enum: notificaEntityTypeValues }).notNull(),
+  entityId: text("entity_id"),
+  titolo: text("titolo").notNull(),
+  autoreId: text("autore_id")
+    .notNull()
+    .references(() => utenti.id),
+  letta: integer("letta", { mode: "boolean" }).$defaultFn(() => false).notNull(),
+  creatoIl: text("creato_il")
+    .$defaultFn(() => new Date().toISOString())
+    .notNull(),
+});
+
 /**
  * Config/settings table - single row for app-wide settings.
  * Simplified: no password (auth is per-user via utenti).

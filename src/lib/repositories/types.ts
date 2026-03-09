@@ -83,3 +83,36 @@ export type UpdateInfoImportanteData = {
   tipo: "scuola" | "medico" | "altro";
   valore: InfoImportanteValore | null;
 };
+
+export type NotificaTipo =
+  | "evento_aggiunto"
+  | "evento_modificato"
+  | "evento_eliminato"
+  | "info_aggiunta"
+  | "info_modificata"
+  | "info_eliminata";
+
+export type NotificaEntityType = "evento" | "info_importante";
+
+export type Notifica = {
+  id: string;
+  utenteId: string;
+  tipo: NotificaTipo;
+  entityType: NotificaEntityType;
+  entityId: string | null;
+  titolo: string;
+  autoreId: string;
+  letta: boolean;
+  creatoIl: string;
+};
+
+export type NotificaWithAutore = Notifica & { autoreNome: string | null };
+
+export type CreateNotificaData = {
+  utenteId: string;
+  tipo: NotificaTipo;
+  entityType: NotificaEntityType;
+  entityId: string | null;
+  titolo: string;
+  autoreId: string;
+};

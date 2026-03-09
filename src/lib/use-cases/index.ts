@@ -6,8 +6,9 @@ export { CreateInfoImportanteUseCase } from "./create-info-importante-use-case";
 export { UpdateInfoImportanteUseCase } from "./update-info-importante-use-case";
 export { DeleteInfoImportanteUseCase } from "./delete-info-importante-use-case";
 export { TogglePinInfoImportanteUseCase } from "./toggle-pin-info-importante-use-case";
+export { CreateNotificationsForOtherUsersUseCase } from "./create-notifications-for-other-users-use-case";
 
-import { userRepository } from "@/lib/repositories";
+import { userRepository, notificationRepository } from "@/lib/repositories";
 import { eventRepository, infoImportantiRepository } from "@/lib/repositories";
 import { LoginUseCase } from "./login-use-case";
 import { GetEventsUseCase } from "./get-events-use-case";
@@ -17,6 +18,7 @@ import { CreateInfoImportanteUseCase } from "./create-info-importante-use-case";
 import { UpdateInfoImportanteUseCase } from "./update-info-importante-use-case";
 import { DeleteInfoImportanteUseCase } from "./delete-info-importante-use-case";
 import { TogglePinInfoImportanteUseCase } from "./toggle-pin-info-importante-use-case";
+import { CreateNotificationsForOtherUsersUseCase } from "./create-notifications-for-other-users-use-case";
 
 export const loginUseCase = new LoginUseCase(userRepository);
 export const getEventsUseCase = new GetEventsUseCase(eventRepository);
@@ -36,3 +38,8 @@ export const deleteInfoImportanteUseCase = new DeleteInfoImportanteUseCase(
 export const togglePinInfoImportanteUseCase = new TogglePinInfoImportanteUseCase(
   infoImportantiRepository
 );
+export const createNotificationsForOtherUsersUseCase =
+  new CreateNotificationsForOtherUsersUseCase(
+    notificationRepository,
+    userRepository
+  );

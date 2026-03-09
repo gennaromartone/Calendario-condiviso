@@ -5,6 +5,14 @@ import type { IUserRepository } from "./user-repository";
 import type { UserWithPasswordHash, UserWithProfile } from "./types";
 
 export class DrizzleUserRepository implements IUserRepository {
+  async findAllIds(): Promise<string[]> {
+    const rows = await db
+      .select({ id: utenti.id })
+      .from(utenti)
+      .where(ne(utenti.id, "migrated-legacy"));
+    return rows.map((r) => r.id);
+  }
+
   async findAllWithPasswordHash() {
     const rows = await db
       .select({
