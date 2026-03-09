@@ -1,8 +1,17 @@
 "use client";
 
-import { ChevronDown, Download, Upload, Settings, LogOut } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Download,
+  Upload,
+  Settings,
+  LogOut,
+  PartyPopper,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useBackupActions } from "@/hooks/use-backup-actions";
+import { useHolidayCountriesContext } from "@/contexts/holiday-countries-context";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -11,12 +20,17 @@ import {
   DropdownMenuItem,
   DropdownMenuLinkItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 
 export function CalendarHeaderActions() {
   const { userName, logout } = useAuth();
   const { handleExport, handleImport, triggerImport, inputRef } =
     useBackupActions();
+  const [, setHolidayPreference, holidayPreference] =
+    useHolidayCountriesContext();
 
   const displayName = userName?.trim() || "Utente";
 
@@ -36,8 +50,8 @@ export function CalendarHeaderActions() {
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            "inline-flex min-h-[44px] min-w-[44px] items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium outline-none transition-colors",
-            "hover:bg-muted hover:text-foreground",
+            "inline-flex min-h-[44px] min-w-[44px] items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium outline-none transition-all duration-200",
+            "hover:bg-muted hover:text-foreground hover:border-muted-foreground/20",
             "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
             "aria-expanded:bg-muted aria-expanded:text-foreground"
           )}
@@ -71,6 +85,33 @@ export function CalendarHeaderActions() {
             <Settings className="size-4" aria-hidden />
             Admin
           </DropdownMenuLinkItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <PartyPopper className="size-4" aria-hidden />
+              Festività
+              <ChevronRight className="ml-auto size-4" aria-hidden />
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem
+                onClick={() => setHolidayPreference("both")}
+                className={cn(holidayPreference === "both" && "bg-muted")}
+              >
+                IT + DE
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setHolidayPreference("IT")}
+                className={cn(holidayPreference === "IT" && "bg-muted")}
+              >
+                Italia
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setHolidayPreference("DE")}
+                className={cn(holidayPreference === "DE" && "bg-muted")}
+              >
+                Germania
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => logout()}>
             <LogOut className="size-4" aria-hidden />

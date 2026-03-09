@@ -6,8 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
-import { useHolidayCountries } from "@/hooks/use-holiday-countries";
+import { useHolidayCountriesContext } from "@/contexts/holiday-countries-context";
 import { MonthlyGrid } from "./monthly-grid";
 import { WeeklyGrid } from "./weekly-grid";
 import { EventDetailSheet } from "./event-detail-sheet";
@@ -51,8 +50,7 @@ export function CalendarView({
   });
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [formSheetOpen, setFormSheetOpen] = useState(false);
-  const [holidayCountries, setHolidayPreference, holidayPreference] =
-    useHolidayCountries();
+  const [holidayCountries] = useHolidayCountriesContext();
   const [formSheetMode, setFormSheetMode] = useState<"create" | "edit">("create");
   const [formSheetEvent, setFormSheetEvent] = useState<EventRecord | null>(null);
 
@@ -224,18 +222,18 @@ export function CalendarView({
   }, [weekStart, month, year, monthNames]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-medium sm:text-xl">
+        <h2 className="text-lg font-semibold text-foreground sm:text-xl">
           {viewMode === "month" ? monthLabel : weekLabel}
         </h2>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           <Button
             size="sm"
             onClick={handleNewEvent}
             aria-label="Nuovo evento"
-            className="min-h-[44px] min-w-[44px]"
+            className="hidden min-h-[44px] min-w-[44px] lg:inline-flex"
           >
             <Plus data-icon="inline-start" />
             Nuovo evento
@@ -243,7 +241,7 @@ export function CalendarView({
           <div
             role="group"
             aria-label="Vista calendario"
-            className="inline-flex rounded-md border border-input bg-background p-0.5"
+            className="inline-flex rounded-lg border border-input bg-muted/30 p-1"
           >
             <button
               type="button"
@@ -251,10 +249,10 @@ export function CalendarView({
               aria-pressed={viewMode === "month"}
               aria-label="Vista mensile"
               className={cn(
-                "min-h-[44px] min-w-[44px] rounded px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                "min-h-[44px] min-w-[44px] rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
                 viewMode === "month"
                   ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               )}
             >
               Mese
@@ -265,42 +263,14 @@ export function CalendarView({
               aria-pressed={viewMode === "week"}
               aria-label="Vista settimanale"
               className={cn(
-                "min-h-[44px] min-w-[44px] rounded px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                "min-h-[44px] min-w-[44px] rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
                 viewMode === "week"
                   ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               )}
             >
               Settimana
             </button>
-          </div>
-
-          <div
-            role="group"
-            aria-label="Paesi festività"
-            className="flex items-center gap-2"
-          >
-            <label
-              htmlFor="holiday-countries"
-              className="text-sm text-muted-foreground"
-            >
-              Festività
-            </label>
-            <Select
-              id="holiday-countries"
-              value={holidayPreference}
-              onChange={(e) =>
-                setHolidayPreference(
-                  e.target.value as "IT" | "DE" | "both"
-                )
-              }
-              aria-label="Seleziona paesi per le festività"
-              className="h-9 w-[120px]"
-            >
-              <option value="both">IT + DE</option>
-              <option value="IT">Italia</option>
-              <option value="DE">Germania</option>
-            </Select>
           </div>
 
           {viewMode === "month" ? (
@@ -310,9 +280,9 @@ export function CalendarView({
                 size="sm"
                 onClick={goPrevMonth}
                 aria-label="Mese precedente"
-                className="min-h-[44px] min-w-[44px]"
+                className="min-h-[44px] min-w-[44px] transition-colors hover:bg-muted"
               >
-                <ChevronLeft data-icon="inline-start" />
+                <ChevronLeft className="size-4" data-icon="inline-start" />
                 Precedente
               </Button>
               <Button
@@ -320,10 +290,10 @@ export function CalendarView({
                 size="sm"
                 onClick={goNextMonth}
                 aria-label="Mese successivo"
-                className="min-h-[44px] min-w-[44px]"
+                className="min-h-[44px] min-w-[44px] transition-colors hover:bg-muted"
               >
                 Successivo
-                <ChevronRight data-icon="inline-end" />
+                <ChevronRight className="size-4" data-icon="inline-end" />
               </Button>
             </>
           ) : (
@@ -333,9 +303,9 @@ export function CalendarView({
                 size="sm"
                 onClick={goPrevWeek}
                 aria-label="Settimana precedente"
-                className="min-h-[44px] min-w-[44px]"
+                className="min-h-[44px] min-w-[44px] transition-colors hover:bg-muted"
               >
-                <ChevronLeft data-icon="inline-start" />
+                <ChevronLeft className="size-4" data-icon="inline-start" />
                 Precedente
               </Button>
               <Button
@@ -343,10 +313,10 @@ export function CalendarView({
                 size="sm"
                 onClick={goNextWeek}
                 aria-label="Settimana successiva"
-                className="min-h-[44px] min-w-[44px]"
+                className="min-h-[44px] min-w-[44px] transition-colors hover:bg-muted"
               >
                 Successivo
-                <ChevronRight data-icon="inline-end" />
+                <ChevronRight className="size-4" data-icon="inline-end" />
               </Button>
             </>
           )}
@@ -389,6 +359,15 @@ export function CalendarView({
         mode={formSheetMode}
         currentUserId={userId}
       />
+
+      <Button
+        size="icon"
+        onClick={handleNewEvent}
+        aria-label="Nuovo evento"
+        className="fixed bottom-6 right-6 z-40 size-14 rounded-full shadow-lg transition-all hover:scale-105 lg:hidden"
+      >
+        <Plus className="size-6" aria-hidden />
+      </Button>
     </div>
   );
 }
