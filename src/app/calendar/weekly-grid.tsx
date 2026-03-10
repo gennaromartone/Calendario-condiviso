@@ -149,6 +149,10 @@ export function WeeklyGrid({
 
   const holidayCellClasses = "bg-amber-50 dark:bg-amber-950/20";
 
+  /** Altezza header + altezza strip per calcolo posizionamento mobile */
+  const MOBILE_HEADER_H = 60;
+  const MOBILE_STRIP_H = 28;
+
   return (
     <div
       className={cn(
@@ -159,15 +163,13 @@ export function WeeklyGrid({
     >
       <div className="min-w-[320px] sm:min-w-[375px] md:min-w-0">
         <div className="block md:hidden">
-          <div
-            className="grid grid-cols-7"
-            style={{
-              gridTemplateRows:
-                numLanes > 0
-                  ? `auto repeat(${numLanes}, minmax(24px, auto)) auto`
-                  : "auto auto",
-            }}
-          >
+          <div className="relative">
+            <div
+              className="grid grid-cols-7"
+              style={{
+                gridTemplateRows: "auto auto",
+              }}
+            >
             {weekdays.map((day, i) => {
               const date = weekDates[i];
               const key = date ? toDateKey(date) : "";
@@ -232,26 +234,6 @@ export function WeeklyGrid({
                 </div>
               );
             })}
-            {multiDayStrips.map(
-              ({ event, startCol, span, lane, isFirstDay, isLastDay }) => (
-                <div
-                  key={event.id}
-                  className="col-span-1 flex items-center px-0.5"
-                  style={{
-                    gridColumn: `${startCol} / span ${span}`,
-                    gridRow: 2 + lane,
-                  }}
-                >
-                  <EventStrip
-                    event={event}
-                    onClick={onEventClick}
-                    className="w-full"
-                    isFirstDay={isFirstDay}
-                    isLastDay={isLastDay}
-                  />
-                </div>
-              )
-            )}
             {weekDates.map((date, i) => {
               const key = toDateKey(date);
               const dayEvents = eventsByDate.get(key) ?? [];
@@ -274,7 +256,8 @@ export function WeeklyGrid({
                   )}
                   style={{
                     gridColumn: i + 1,
-                    gridRow: 2 + numLanes,
+                    gridRow: 2,
+                    paddingTop: numLanes * MOBILE_STRIP_H,
                   }}
                 >
                   <div className="flex flex-col gap-1">
@@ -299,6 +282,49 @@ export function WeeklyGrid({
                 </div>
               );
             })}
+            </div>
+
+            {/* Mobile: eventi multi-giorno in posizione assoluta con width calcolata */}
+            {numLanes > 0 && (
+              <div
+                className="absolute left-0 right-0"
+                style={{
+                  top: MOBILE_HEADER_H,
+                  height: numLanes * MOBILE_STRIP_H,
+                  width: "100%",
+                }}
+              >
+                {multiDayStrips.map(
+                  ({
+                    event,
+                    startCol,
+                    span,
+                    lane,
+                    isFirstDay,
+                    isLastDay,
+                  }) => (
+                    <div
+                      key={event.id}
+                      className="absolute flex items-center px-0.5"
+                      style={{
+                        left: `${((startCol - 1) / 7) * 100}%`,
+                        width: `${(span / 7) * 100}%`,
+                        top: lane * MOBILE_STRIP_H,
+                        height: MOBILE_STRIP_H - 4,
+                      }}
+                    >
+                      <EventStrip
+                        event={event}
+                        onClick={onEventClick}
+                        className="w-full"
+                        isFirstDay={isFirstDay}
+                        isLastDay={isLastDay}
+                      />
+                    </div>
+                  )
+                )}
+              </div>
+            )}
           </div>
         </div>
 

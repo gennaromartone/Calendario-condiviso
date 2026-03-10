@@ -4,6 +4,8 @@ import { useCallback, useRef, useState } from "react";
 
 const CELL_SELECTOR = "[data-date]";
 const DRAG_THRESHOLD_PX = 5;
+/** Durata minima del touch per attivare la creazione evento su mobile (ms) */
+const LONG_PRESS_MS = 500;
 
 export interface DateRangeSelected {
   startDate: string;
@@ -20,6 +22,7 @@ export function useDragToSelectDates(
   const endDateKeyRef = useRef<string | null>(null);
   const startPosRef = useRef<{ x: number; y: number } | null>(null);
   const hasMovedRef = useRef(false);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const getDateKeyFromElement = useCallback((el: Element | null): string | null => {
     if (!el) return null;
@@ -97,17 +100,11 @@ export function useDragToSelectDates(
     [finishDrag]
   );
 
-  const handlePointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      if (e.button !== 0) return;
-      if ((e.target as Element).closest("[data-event-id]")) return;
-
-      const dateKey = getDateKeyFromElement(e.target as Element);
-      if (!dateKey) return;
-
+  const activateDragMode = useCallback(
+    (dateKey: string, clientX: number, clientY: number) => {
       startDateKeyRef.current = dateKey;
       endDateKeyRef.current = dateKey;
-      startPosRef.current = { x: e.clientX, y: e.clientY };
+      startPosRef.current = { x: clientX, y: clientY };
       hasMovedRef.current = false;
       setIsDragging(true);
       setSelectedDateKeys([dateKey]);
@@ -124,7 +121,62 @@ export function useDragToSelectDates(
       document.addEventListener("pointerup", onUp);
       document.addEventListener("pointercancel", onUp);
     },
-    [getDateKeyFromElement, handlePointerMove, handlePointerUp]
+    [handlePointerMove, handlePointerUp]
+  );
+
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (e.button !== 0) return;
+      if ((e.target as Element).closest("[data-event-id]")) return;
+
+      const dateKey = getDateKeyFromElement(e.target as Element);
+      if (!dateKey) return;
+
+      const isTouch = e.pointerType === "touch";
+      const startX = e.clientX;
+      const startY = e.clientY;
+
+      if (isTouch) {
+        // Su mobile: touch prolungato (long-press) per creare evento
+        const cancelLongPress = () => {
+          if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+          }
+          document.removeEventListener("pointermove", onMove);
+          document.removeEventListener("pointerup", onUp);
+          document.removeEventListener("pointercancel", onUp);
+        };
+
+        const onMove = (ev: PointerEvent) => {
+          const dx = Math.abs(ev.clientX - startX);
+          const dy = Math.abs(ev.clientY - startY);
+          if (dx > DRAG_THRESHOLD_PX || dy > DRAG_THRESHOLD_PX) {
+            cancelLongPress();
+          }
+        };
+
+        const onUp = () => {
+          cancelLongPress();
+        };
+
+        longPressTimerRef.current = setTimeout(() => {
+          longPressTimerRef.current = null;
+          document.removeEventListener("pointermove", onMove);
+          document.removeEventListener("pointerup", onUp);
+          document.removeEventListener("pointercancel", onUp);
+          activateDragMode(dateKey, startX, startY);
+        }, LONG_PRESS_MS);
+
+        document.addEventListener("pointermove", onMove);
+        document.addEventListener("pointerup", onUp);
+        document.addEventListener("pointercancel", onUp);
+      } else {
+        // Desktop: click/drag immediato
+        activateDragMode(dateKey, startX, startY);
+      }
+    },
+    [getDateKeyFromElement, activateDragMode]
   );
 
   return {

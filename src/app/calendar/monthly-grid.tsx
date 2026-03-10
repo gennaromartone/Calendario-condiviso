@@ -150,6 +150,10 @@ export function MonthlyGrid({
     return result;
   }, [grid, events]);
 
+  /** Altezza header + altezza strip per calcolo posizionamento mobile (monthly) */
+  const MOBILE_HEADER_H = 40;
+  const MOBILE_STRIP_H = 28;
+
   return (
     <div
       className={cn(
@@ -181,16 +185,13 @@ export function MonthlyGrid({
                   : 0;
 
               return (
-                <div
-                  key={w}
-                  className="grid grid-cols-7 border-b border-border last:border-b-0"
-                  style={{
-                    gridTemplateRows:
-                      numLanes > 0
-                        ? `auto repeat(${numLanes}, minmax(24px, auto)) auto`
-                        : "auto auto",
-                  }}
-                >
+                <div key={w} className="relative border-b border-border last:border-b-0">
+                  <div
+                    className="grid grid-cols-7"
+                    style={{
+                      gridTemplateRows: "auto auto",
+                    }}
+                  >
                   {weekCells.map(({ date, isCurrentMonth }, col) => {
                     const key = toDateKey(date);
                     const holidays =
@@ -258,26 +259,6 @@ export function MonthlyGrid({
                       </div>
                     );
                   })}
-                  {weekStrips.map(
-                    ({ event, startCol, span, lane, isFirstDay, isLastDay }) => (
-                      <div
-                        key={event.id}
-                        className="col-span-1 flex items-center px-0.5"
-                        style={{
-                          gridColumn: `${startCol} / span ${span}`,
-                          gridRow: 2 + lane,
-                        }}
-                      >
-                        <EventStrip
-                          event={event}
-                          onClick={onEventClick}
-                          className="w-full"
-                          isFirstDay={isFirstDay}
-                          isLastDay={isLastDay}
-                        />
-                      </div>
-                    )
-                  )}
                   {weekCells.map(({ date, isCurrentMonth }, col) => {
                     const key = toDateKey(date);
                     const dayEvents = eventsByDate.get(key) ?? [];
@@ -303,7 +284,8 @@ export function MonthlyGrid({
                         )}
                         style={{
                           gridColumn: col + 1,
-                          gridRow: 2 + numLanes,
+                          gridRow: 2,
+                          paddingTop: numLanes * MOBILE_STRIP_H,
                         }}
                       >
                         <div className="mt-0.5 flex flex-col gap-1">
@@ -328,6 +310,49 @@ export function MonthlyGrid({
                       </div>
                     );
                   })}
+                  </div>
+
+                  {/* Mobile: eventi multi-giorno in posizione assoluta con width calcolata */}
+                  {numLanes > 0 && (
+                    <div
+                      className="absolute left-0 right-0"
+                      style={{
+                        top: MOBILE_HEADER_H,
+                        height: numLanes * MOBILE_STRIP_H,
+                        width: "100%",
+                      }}
+                    >
+                      {weekStrips.map(
+                        ({
+                          event,
+                          startCol,
+                          span,
+                          lane,
+                          isFirstDay,
+                          isLastDay,
+                        }) => (
+                          <div
+                            key={event.id}
+                            className="absolute flex items-center px-0.5"
+                            style={{
+                              left: `${((startCol - 1) / 7) * 100}%`,
+                              width: `${(span / 7) * 100}%`,
+                              top: lane * MOBILE_STRIP_H,
+                              height: MOBILE_STRIP_H - 4,
+                            }}
+                          >
+                            <EventStrip
+                              event={event}
+                              onClick={onEventClick}
+                              className="w-full"
+                              isFirstDay={isFirstDay}
+                              isLastDay={isLastDay}
+                            />
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
