@@ -3,9 +3,14 @@
 import { useCallback, useMemo, useState } from "react";
 import type { EventRecord } from "@/app/calendar/calendar-utils";
 
+export interface InitialDates {
+  startDate: string;
+  endDate: string;
+}
+
 export interface CalendarModalActions {
   openDetail: (eventId: string) => void;
-  openForm: () => void;
+  openForm: (initialDates?: InitialDates) => void;
 }
 
 export function useCalendarModalState(events: EventRecord[]) {
@@ -14,12 +19,15 @@ export function useCalendarModalState(events: EventRecord[]) {
   const [formSheetMode, setFormSheetMode] = useState<"create" | "edit">("create");
   const [formSheetEvent, setFormSheetEvent] = useState<EventRecord | null>(null);
 
+  const [initialDates, setInitialDates] = useState<InitialDates | null>(null);
+
   const modalActions = useMemo<CalendarModalActions>(
     () => ({
       openDetail: (eventId: string) => setSelectedEventId(eventId),
-      openForm: () => {
+      openForm: (dates?: InitialDates) => {
         setFormSheetMode("create");
         setFormSheetEvent(null);
+        setInitialDates(dates ?? null);
         setFormSheetOpen(true);
       },
     }),
@@ -42,16 +50,23 @@ export function useCalendarModalState(events: EventRecord[]) {
     setSelectedEventId(null);
     setFormSheetMode("edit");
     setFormSheetEvent(event);
+    setInitialDates(null);
     setFormSheetOpen(true);
+  }, []);
+
+  const handleFormOpenChange = useCallback((open: boolean) => {
+    setFormSheetOpen(open);
+    if (!open) setInitialDates(null);
   }, []);
 
   return {
     selectedEvent,
     selectedEventId,
     formSheetOpen,
-    setFormSheetOpen,
+    setFormSheetOpen: handleFormOpenChange,
     formSheetMode,
     formSheetEvent,
+    initialDates,
     modalActions,
     handleDetailOpenChange,
     handleModifyEvent,

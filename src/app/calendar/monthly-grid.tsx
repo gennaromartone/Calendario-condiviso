@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { format } from "date-fns";
 import { PartyPopper } from "lucide-react";
 import { EventBlock } from "./event-block";
 import { EventStrip } from "./event-strip";
@@ -20,6 +21,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useDragToSelectDates } from "@/hooks/use-drag-to-select-dates";
 
 interface MonthlyGridProps {
   year: number;
@@ -29,6 +31,7 @@ interface MonthlyGridProps {
   loading?: boolean;
   holidayCountries?: HolidayCountry[];
   onEventClick?: (event: EventRecord) => void;
+  onDateRangeSelect?: (range: { startDate: string; endDate: string }) => void;
 }
 
 export function MonthlyGrid({
@@ -39,7 +42,19 @@ export function MonthlyGrid({
   loading = false,
   holidayCountries = ["IT", "DE"],
   onEventClick,
+  onDateRangeSelect,
 }: MonthlyGridProps) {
+  const handleDateRangeSelected = useCallback(
+    (range: { startDate: string; endDate: string }) => {
+      onDateRangeSelect?.(range);
+    },
+    [onDateRangeSelect]
+  );
+
+  const { isDragging, selectedDateKeys, onPointerDown } =
+    useDragToSelectDates(handleDateRangeSelected);
+
+  const todayKey = format(new Date(), "yyyy-MM-dd");
   const grid = useMemo(() => getMonthGrid(year, month), [year, month]);
 
   const holidaysByDate = useMemo(
@@ -136,7 +151,13 @@ export function MonthlyGrid({
   }, [grid, events]);
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border bg-card">
+    <div
+      className={cn(
+        "overflow-x-auto rounded-lg border border-border bg-card",
+        isDragging && "touch-none select-none"
+      )}
+      onPointerDown={onPointerDown}
+    >
       <div className="min-w-[320px] sm:min-w-[375px] md:min-w-0">
         <div className="grid grid-cols-7 border-b border-border">
           {weekdays.map((day) => (
@@ -177,12 +198,17 @@ export function MonthlyGrid({
                     return (
                       <div
                         key={col}
+                        data-date={key}
                         className={cn(
                           "flex flex-col items-center justify-center border-r border-border p-1 last:border-r-0",
                           !isCurrentMonth && "bg-muted/30 text-muted-foreground",
                           isCurrentMonth &&
                             holidays.length > 0 &&
-                            "bg-amber-50 dark:bg-amber-950/20"
+                            "bg-amber-50 dark:bg-amber-950/20",
+                          key === todayKey && "bg-primary/10 ring-1 ring-primary/50",
+                          isDragging &&
+                            selectedDateKeys.includes(key) &&
+                            "bg-primary/20 ring-1 ring-primary/40"
                         )}
                         style={{ gridColumn: col + 1, gridRow: 1 }}
                       >
@@ -190,11 +216,13 @@ export function MonthlyGrid({
                           <Tooltip>
                             <TooltipTrigger
                               render={
-                                <span
-                                  className={cn(
-                                    "inline-flex size-7 cursor-default items-center justify-center gap-0.5 rounded-full text-sm",
-                                    "font-medium text-foreground"
-                                  )}
+                          <span
+                            className={cn(
+                              "inline-flex size-7 cursor-default items-center justify-center gap-0.5 rounded-full text-sm",
+                              "font-medium text-foreground",
+                              key === todayKey &&
+                                "bg-primary text-primary-foreground"
+                            )}
                                   aria-label={holidays
                                     .map((h) => h.name)
                                     .join(", ")}
@@ -219,7 +247,9 @@ export function MonthlyGrid({
                               "inline-flex size-7 items-center justify-center rounded-full text-sm",
                               isCurrentMonth
                                 ? "font-medium text-foreground"
-                                : "text-muted-foreground"
+                                : "text-muted-foreground",
+                              key === todayKey &&
+                                "bg-primary text-primary-foreground"
                             )}
                           >
                             {date.getDate()}
@@ -259,12 +289,17 @@ export function MonthlyGrid({
                     return (
                       <div
                         key={`cell-${col}`}
+                        data-date={key}
                         className={cn(
                           "min-h-[60px] border-r border-border p-1 last:border-r-0",
                           !isCurrentMonth && "bg-muted/30 text-muted-foreground",
                           isCurrentMonth &&
                             holidays.length > 0 &&
-                            "bg-amber-50 dark:bg-amber-950/20"
+                            "bg-amber-50 dark:bg-amber-950/20",
+                          key === todayKey && "bg-primary/10 ring-1 ring-primary/50",
+                          isDragging &&
+                            selectedDateKeys.includes(key) &&
+                            "bg-primary/20 ring-1 ring-primary/40"
                         )}
                         style={{
                           gridColumn: col + 1,
@@ -310,12 +345,17 @@ export function MonthlyGrid({
               return (
                 <div
                   key={i}
+                  data-date={key}
                   className={cn(
                     "min-h-[80px] border-b border-r border-border p-1 sm:min-h-[100px] sm:p-2 md:min-h-[110px] lg:min-h-[120px]",
                     !isCurrentMonth && "bg-muted/30 text-muted-foreground",
                     isCurrentMonth &&
                       holidays.length > 0 &&
-                      "bg-amber-50 dark:bg-amber-950/20"
+                      "bg-amber-50 dark:bg-amber-950/20",
+                    key === todayKey && "bg-primary/10 ring-1 ring-primary/50",
+                    isDragging &&
+                      selectedDateKeys.includes(key) &&
+                      "bg-primary/20 ring-1 ring-primary/40"
                   )}
                 >
                   {holidays.length > 0 ? (
@@ -325,7 +365,9 @@ export function MonthlyGrid({
                           <span
                             className={cn(
                               "inline-flex size-7 cursor-default items-center justify-center gap-0.5 rounded-full text-sm sm:size-8",
-                              "font-medium text-foreground"
+                              "font-medium text-foreground",
+                              key === todayKey &&
+                                "bg-primary text-primary-foreground"
                             )}
                             aria-label={holidays.map((h) => h.name).join(", ")}
                           >
@@ -349,7 +391,9 @@ export function MonthlyGrid({
                         "inline-flex size-7 items-center justify-center rounded-full text-sm sm:size-8",
                         isCurrentMonth
                           ? "font-medium text-foreground"
-                          : "text-muted-foreground"
+                          : "text-muted-foreground",
+                        key === todayKey &&
+                          "bg-primary text-primary-foreground"
                       )}
                     >
                       {date.getDate()}

@@ -65,6 +65,7 @@ export function EventStrip({
   return (
     <button
       type="button"
+      data-event-id={event.id}
       onClick={() => onClick?.(event)}
       aria-label={ariaLabel}
       className={cn(

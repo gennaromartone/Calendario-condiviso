@@ -6,14 +6,12 @@ import { cn } from "@/lib/utils";
 import { EventDetailSheet } from "./event-detail-sheet";
 import { EventFormSheet } from "./event-form-sheet";
 import type { EventRecord } from "./calendar-utils";
-import { useCalendarModalState } from "@/hooks/use-calendar-modal-state";
+import {
+  useCalendarModalState,
+  type CalendarModalActions,
+} from "@/hooks/use-calendar-modal-state";
 
 type ViewMode = "month" | "week";
-
-export interface CalendarModalActions {
-  openDetail: (eventId: string) => void;
-  openForm: () => void;
-}
 
 interface HeaderCalendarProps {
   label: string;
@@ -43,6 +41,7 @@ export function HeaderCalendar({
     setFormSheetOpen,
     formSheetMode,
     formSheetEvent,
+    initialDates,
     modalActions,
     handleDetailOpenChange,
     handleModifyEvent,
@@ -167,6 +166,7 @@ export function HeaderCalendar({
         onOpenChange={setFormSheetOpen}
         event={formSheetEvent}
         mode={formSheetMode}
+        initialDates={initialDates ?? undefined}
         currentUserId={userId}
       />
     </>

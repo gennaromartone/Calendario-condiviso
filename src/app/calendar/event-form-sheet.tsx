@@ -26,6 +26,7 @@ interface EventFormSheetProps {
   onOpenChange: (open: boolean) => void;
   event?: EventRecord | null;
   mode: "create" | "edit";
+  initialDates?: { startDate: string; endDate: string };
   currentUserId?: string;
 }
 
@@ -34,6 +35,7 @@ export function EventFormSheet({
   onOpenChange,
   event,
   mode,
+  initialDates,
   currentUserId,
 }: EventFormSheetProps) {
   const { needsAffidamentoColor, refreshSession } = useAuth();
@@ -130,6 +132,7 @@ export function EventFormSheet({
             ) : (
               <EventForm
                 event={mode === "edit" ? event : undefined}
+                initialDates={mode === "create" ? initialDates : undefined}
                 onSubmit={handleSubmit}
                 onDelete={mode === "edit" ? handleDeleteClick : undefined}
                 isLoading={isLoading}

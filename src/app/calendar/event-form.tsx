@@ -63,6 +63,7 @@ function getDateKeysFromForm(startDate: string, endDate: string): string[] {
 
 interface EventFormProps {
   event?: EventRecord | null;
+  initialDates?: { startDate: string; endDate: string };
   onSubmit: (values: CreateEventInput) => Promise<void>;
   onDelete?: () => void;
   isLoading?: boolean;
@@ -71,6 +72,7 @@ interface EventFormProps {
 
 export function EventForm({
   event,
+  initialDates,
   onSubmit,
   onDelete,
   isLoading = false,
@@ -92,9 +94,9 @@ export function EventForm({
     : {
         titolo: "",
         descrizione: "",
-        dataInizioDate: format(new Date(), "yyyy-MM-dd"),
+        dataInizioDate: initialDates?.startDate ?? format(new Date(), "yyyy-MM-dd"),
         dataInizioTime: "09:00",
-        dataFineDate: format(new Date(), "yyyy-MM-dd"),
+        dataFineDate: initialDates?.endDate ?? format(new Date(), "yyyy-MM-dd"),
         dataFineTime: "10:00",
         tipo: "affidamento",
         luogo: "",

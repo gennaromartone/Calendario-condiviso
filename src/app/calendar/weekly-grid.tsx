@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { format } from "date-fns";
 import { PartyPopper } from "lucide-react";
 import { EventBlock } from "./event-block";
 import { EventStrip } from "./event-strip";
@@ -20,6 +21,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useDragToSelectDates } from "@/hooks/use-drag-to-select-dates";
 
 interface WeeklyGridProps {
   weekStart: Date;
@@ -28,6 +30,7 @@ interface WeeklyGridProps {
   loading?: boolean;
   holidayCountries?: HolidayCountry[];
   onEventClick?: (event: EventRecord) => void;
+  onDateRangeSelect?: (range: { startDate: string; endDate: string }) => void;
 }
 
 export function WeeklyGrid({
@@ -37,7 +40,19 @@ export function WeeklyGrid({
   loading = false,
   holidayCountries = ["IT", "DE"],
   onEventClick,
+  onDateRangeSelect,
 }: WeeklyGridProps) {
+  const handleDateRangeSelected = useCallback(
+    (range: { startDate: string; endDate: string }) => {
+      onDateRangeSelect?.(range);
+    },
+    [onDateRangeSelect]
+  );
+
+  const { isDragging, selectedDateKeys, onPointerDown } =
+    useDragToSelectDates(handleDateRangeSelected);
+
+  const todayKey = format(new Date(), "yyyy-MM-dd");
   const weekDates = useMemo(
     () => getWeekDates(weekStart),
     [weekStart]
@@ -135,7 +150,13 @@ export function WeeklyGrid({
   const holidayCellClasses = "bg-amber-50 dark:bg-amber-950/20";
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border bg-card">
+    <div
+      className={cn(
+        "overflow-x-auto rounded-lg border border-border bg-card",
+        isDragging && "touch-none select-none"
+      )}
+      onPointerDown={onPointerDown}
+    >
       <div className="min-w-[320px] sm:min-w-[375px] md:min-w-0">
         <div className="block md:hidden">
           <div
@@ -157,9 +178,14 @@ export function WeeklyGrid({
               return (
                 <div
                   key={day}
+                  data-date={key}
                   className={cn(
                     "flex flex-col items-center gap-0.5 border-r border-border px-1 py-2 last:border-r-0",
-                    isHoliday && holidayCellClasses
+                    isHoliday && holidayCellClasses,
+                    key === todayKey && "bg-primary/10 ring-1 ring-primary/50",
+                    isDragging &&
+                      selectedDateKeys.includes(key) &&
+                      "bg-primary/20 ring-1 ring-primary/40"
                   )}
                   style={{ gridColumn: i + 1, gridRow: 1 }}
                 >
@@ -173,7 +199,9 @@ export function WeeklyGrid({
                           <span
                             className={cn(
                               "inline-flex size-8 cursor-default items-center justify-center gap-0.5 rounded-full text-sm font-medium",
-                              "text-foreground"
+                              "text-foreground",
+                              key === todayKey &&
+                                "bg-primary text-primary-foreground"
                             )}
                             aria-label={holidayNames}
                           >
@@ -193,7 +221,9 @@ export function WeeklyGrid({
                     <span
                       className={cn(
                         "flex size-8 items-center justify-center rounded-full text-sm font-medium",
-                        "text-foreground"
+                        "text-foreground",
+                        key === todayKey &&
+                          "bg-primary text-primary-foreground"
                       )}
                     >
                       {date?.getDate() ?? ""}
@@ -233,9 +263,14 @@ export function WeeklyGrid({
               return (
                 <div
                   key={i}
+                  data-date={key}
                   className={cn(
                     "min-h-[80px] border-b border-r border-border p-2 last:border-r-0",
-                    isHoliday && holidayCellClasses
+                    isHoliday && holidayCellClasses,
+                    key === todayKey && "bg-primary/10 ring-1 ring-primary/50",
+                    isDragging &&
+                      selectedDateKeys.includes(key) &&
+                      "bg-primary/20 ring-1 ring-primary/40"
                   )}
                   style={{
                     gridColumn: i + 1,
@@ -279,9 +314,14 @@ export function WeeklyGrid({
                 return (
                   <div
                     key={day}
+                    data-date={key}
                     className={cn(
                       "flex flex-col items-center gap-0.5 border-r border-border px-1 py-2 last:border-r-0 sm:px-2 md:text-base",
-                      isHoliday && holidayCellClasses
+                      isHoliday && holidayCellClasses,
+                      key === todayKey && "bg-primary/10 ring-1 ring-primary/50",
+                      isDragging &&
+                        selectedDateKeys.includes(key) &&
+                        "bg-primary/20 ring-1 ring-primary/40"
                     )}
                   >
                     <span className="text-xs font-medium text-muted-foreground sm:text-sm">
@@ -294,7 +334,9 @@ export function WeeklyGrid({
                             <span
                               className={cn(
                                 "inline-flex size-8 cursor-default items-center justify-center gap-0.5 rounded-full text-sm font-medium",
-                                "text-foreground"
+                                "text-foreground",
+                                key === todayKey &&
+                                  "bg-primary text-primary-foreground"
                               )}
                               aria-label={holidayNames}
                             >
@@ -314,7 +356,9 @@ export function WeeklyGrid({
                       <span
                         className={cn(
                           "flex size-8 items-center justify-center rounded-full text-sm font-medium",
-                          "text-foreground"
+                          "text-foreground",
+                          key === todayKey &&
+                            "bg-primary text-primary-foreground"
                         )}
                       >
                         {date?.getDate() ?? ""}
@@ -334,9 +378,14 @@ export function WeeklyGrid({
                 return (
                   <div
                     key={i}
+                    data-date={key}
                     className={cn(
                       "min-h-[120px] border-b border-r border-border p-2 last:border-r-0 sm:min-h-[160px] md:min-h-[180px] lg:min-h-[200px]",
-                      isHoliday && holidayCellClasses
+                      isHoliday && holidayCellClasses,
+                      key === todayKey && "bg-primary/10 ring-1 ring-primary/50",
+                      isDragging &&
+                        selectedDateKeys.includes(key) &&
+                        "bg-primary/20 ring-1 ring-primary/40"
                     )}
                   >
                     <div className="flex flex-col gap-1">

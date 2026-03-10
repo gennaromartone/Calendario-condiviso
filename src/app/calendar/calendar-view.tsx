@@ -215,6 +215,12 @@ export function CalendarView({
               onEventClick={(event: EventRecord) =>
                 modalActions.openDetail(event.id)
               }
+              onDateRangeSelect={(range) =>
+                modalActions.openForm({
+                  startDate: range.startDate,
+                  endDate: range.endDate,
+                })
+              }
             />
           ) : (
             <WeeklyGrid
@@ -225,6 +231,12 @@ export function CalendarView({
               holidayCountries={holidayCountries}
               onEventClick={(event: EventRecord) =>
                 modalActions.openDetail(event.id)
+              }
+              onDateRangeSelect={(range) =>
+                modalActions.openForm({
+                  startDate: range.startDate,
+                  endDate: range.endDate,
+                })
               }
             />
           )}
