@@ -42,7 +42,7 @@ export function CalendarHeaderActions() {
 
   return (
     <nav
-      className="flex items-center justify-end"
+      className="flex items-center justify-end gap-3"
       aria-label="Azioni calendario"
     >
       <input

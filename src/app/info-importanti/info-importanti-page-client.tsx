@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useUnreadCount } from "@/hooks/use-unread-count";
 import { NotificationBell } from "@/components/notification-bell";
 import { NotificationPanel } from "@/components/notification-panel";
@@ -9,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getInfoImportanti } from "@/lib/api";
 import type { InfoImportanteRecord } from "@/lib/api";
 import { InfoImportanteFormSheet } from "./info-importante-form-sheet";
+import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2, Loader2, Pin } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Pin } from "lucide-react";
 import { useInfoImportantiMutations } from "@/hooks/use-info-importanti-mutations";
 import { safeTelUrl, safeMapsUrl } from "@/lib/info-importanti-links";
 
@@ -175,34 +175,17 @@ export function InfoImportantiPageClient() {
 
   return (
     <main>
-      <header className="mb-6 flex flex-col gap-4 sm:mb-8">
-        <nav
-          className="flex items-center gap-1 text-sm text-muted-foreground"
-          aria-label="Breadcrumb"
-        >
-          <Link
-            href="/calendar"
-            className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2"
-            aria-label="Torna al calendario"
-          >
-            <ChevronLeft className="size-5" aria-hidden />
-          </Link>
-          <Link
-            href="/calendar"
-            className="rounded-lg px-2 py-1.5 outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            Calendario
-          </Link>
-          <ChevronRight className="size-4 shrink-0 text-muted-foreground/60" aria-hidden />
-          <span className="font-medium text-foreground" aria-current="page">
-            Info importanti
-          </span>
-        </nav>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-2xl md:text-3xl">
-            Info importanti
-          </h1>
-          <div className="flex items-center gap-2">
+      <AppHeader>
+        <AppHeader.Breadcrumb>
+          <AppHeader.BreadcrumbTrail>
+            <AppHeader.BreadcrumbBack href="/calendar" />
+            <AppHeader.BreadcrumbLink href="/calendar">
+              Calendario
+            </AppHeader.BreadcrumbLink>
+            <AppHeader.BreadcrumbSeparator />
+            <AppHeader.BreadcrumbCurrent as="h1">Info importanti</AppHeader.BreadcrumbCurrent>
+          </AppHeader.BreadcrumbTrail>
+          <AppHeader.BreadcrumbActions>
             <NotificationBell
               onClick={() => setNotificationOpen(true)}
               unreadCount={unreadCount}
@@ -224,9 +207,9 @@ export function InfoImportantiPageClient() {
               <Plus className="size-5" aria-hidden />
               Aggiungi info
             </Button>
-          </div>
-        </div>
-      </header>
+          </AppHeader.BreadcrumbActions>
+        </AppHeader.Breadcrumb>
+      </AppHeader>
 
       {isPending ? (
         <p className="text-muted-foreground">Caricamento…</p>

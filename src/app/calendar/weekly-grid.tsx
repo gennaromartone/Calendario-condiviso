@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import { useMeasuredHeaderHeight } from "@/hooks/use-measured-header-height";
 import { format } from "date-fns";
 import { PartyPopper } from "lucide-react";
 import { EventBlock } from "./event-block";
@@ -149,8 +150,7 @@ export function WeeklyGrid({
 
   const holidayCellClasses = "bg-amber-50 dark:bg-amber-950/20";
 
-  /** Altezza header + altezza strip per calcolo posizionamento mobile */
-  const MOBILE_HEADER_H = 60;
+  const [headerRef, headerHeight] = useMeasuredHeaderHeight<HTMLDivElement>();
   const MOBILE_STRIP_H = 28;
 
   return (
@@ -165,6 +165,7 @@ export function WeeklyGrid({
         <div className="block md:hidden">
           <div className="relative">
             <div
+              ref={headerRef}
               className="grid grid-cols-7"
               style={{
                 gridTemplateRows: "auto auto",
@@ -184,7 +185,7 @@ export function WeeklyGrid({
                   className={cn(
                     "flex flex-col items-center gap-0.5 border-r border-border px-1 py-2 last:border-r-0",
                     isHoliday && holidayCellClasses,
-                    key === todayKey && "bg-primary/10 ring-1 ring-primary/50",
+                    key === todayKey && "bg-primary/5",
                     isDragging &&
                       selectedDateKeys.includes(key) &&
                       "bg-primary/20 ring-1 ring-primary/40"
@@ -203,7 +204,7 @@ export function WeeklyGrid({
                               "inline-flex size-8 cursor-default items-center justify-center gap-0.5 rounded-full text-sm font-medium",
                               "text-foreground",
                               key === todayKey &&
-                                "bg-primary text-primary-foreground"
+                                "ring-2 ring-primary/70 text-primary font-semibold"
                             )}
                             aria-label={holidayNames}
                           >
@@ -225,7 +226,7 @@ export function WeeklyGrid({
                         "flex size-8 items-center justify-center rounded-full text-sm font-medium",
                         "text-foreground",
                         key === todayKey &&
-                          "bg-primary text-primary-foreground"
+                          "ring-2 ring-primary/70 text-primary font-semibold"
                       )}
                     >
                       {date?.getDate() ?? ""}
@@ -249,7 +250,7 @@ export function WeeklyGrid({
                   className={cn(
                     "min-h-[80px] border-b border-r border-border p-2 last:border-r-0",
                     isHoliday && holidayCellClasses,
-                    key === todayKey && "bg-primary/10 ring-1 ring-primary/50",
+                    key === todayKey && "bg-primary/5",
                     isDragging &&
                       selectedDateKeys.includes(key) &&
                       "bg-primary/20 ring-1 ring-primary/40"
@@ -285,11 +286,11 @@ export function WeeklyGrid({
             </div>
 
             {/* Mobile: eventi multi-giorno in posizione assoluta con width calcolata */}
-            {numLanes > 0 && (
+            {numLanes > 0 && headerHeight > 0 && (
               <div
                 className="absolute left-0 right-0"
                 style={{
-                  top: MOBILE_HEADER_H,
+                  top: headerHeight,
                   height: numLanes * MOBILE_STRIP_H,
                   width: "100%",
                 }}
@@ -344,7 +345,7 @@ export function WeeklyGrid({
                     className={cn(
                       "flex flex-col items-center gap-0.5 border-r border-border px-1 py-2 last:border-r-0 sm:px-2 md:text-base",
                       isHoliday && holidayCellClasses,
-                      key === todayKey && "bg-primary/10 ring-1 ring-primary/50",
+                      key === todayKey && "bg-primary/5",
                       isDragging &&
                         selectedDateKeys.includes(key) &&
                         "bg-primary/20 ring-1 ring-primary/40"
@@ -362,7 +363,7 @@ export function WeeklyGrid({
                                 "inline-flex size-8 cursor-default items-center justify-center gap-0.5 rounded-full text-sm font-medium",
                                 "text-foreground",
                                 key === todayKey &&
-                                  "bg-primary text-primary-foreground"
+                                  "ring-2 ring-primary/70 text-primary font-semibold"
                               )}
                               aria-label={holidayNames}
                             >
@@ -384,7 +385,7 @@ export function WeeklyGrid({
                           "flex size-8 items-center justify-center rounded-full text-sm font-medium",
                           "text-foreground",
                           key === todayKey &&
-                            "bg-primary text-primary-foreground"
+                            "ring-2 ring-primary/70 text-primary font-semibold"
                         )}
                       >
                         {date?.getDate() ?? ""}
@@ -408,7 +409,7 @@ export function WeeklyGrid({
                     className={cn(
                       "min-h-[120px] border-b border-r border-border p-2 last:border-r-0 sm:min-h-[160px] md:min-h-[180px] lg:min-h-[200px]",
                       isHoliday && holidayCellClasses,
-                      key === todayKey && "bg-primary/10 ring-1 ring-primary/50",
+                      key === todayKey && "bg-primary/5",
                       isDragging &&
                         selectedDateKeys.includes(key) &&
                         "bg-primary/20 ring-1 ring-primary/40"
